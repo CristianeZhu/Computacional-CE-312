@@ -1,0 +1,7 @@
+---
+title: "Trabalho Computacional"
+author: "Cristiane Zhu e Julia Zorzo Ferreira"
+format: html
+editor: visual
+---
+
