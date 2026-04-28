@@ -1,0 +1,150 @@
+1. Introdução
+A análise de variância (ANOVA) é um dos principais métodos estatísticos utilizados para comparar médias entre três ou mais grupos independentes. Seu objetivo central é verificar se as diferenças observadas entre médias amostrais podem ser atribuídas apenas à variabilidade aleatória ou se refletem efeitos reais dos tratamentos avaliados.
+Considere kkk grupos independentes, com observações YijY_{ij}Yij​, em que i=1,2,…,ki = 1,2,\dots,ki=1,2,…,k representa o grupo e j=1,2,…,nij = 1,2,\dots,n_ij=1,2,…,ni​ representa a unidade observacional dentro de cada grupo. No modelo clássico de um fator, assume-se que
+Yij=μ+τi+εij,Y_{ij} = \mu + \tau_i + \varepsilon_{ij},Yij​=μ+τi​+εij​,
+em que:
+
+
+μ\muμ é a média geral;
+
+
+τi\tau_iτi​ é o efeito do iii-ésimo tratamento;
+
+
+εij\varepsilon_{ij}εij​ são erros aleatórios independentes e normalmente distribuídos com média zero e variância constante σ2\sigma^2σ2.
+
+
+O interesse principal consiste em testar a hipótese nula
+H0:μ1=μ2=⋯=μkH_0:\mu_1=\mu_2=\cdots=\mu_kH0​:μ1​=μ2​=⋯=μk​
+contra a hipótese alternativa de que ao menos uma média difere das demais.
+A estatística de teste utilizada pela ANOVA é baseada na razão entre a variabilidade entre grupos e a variabilidade dentro dos grupos, sendo dada por
+F=QMTratQMErro,F=\frac{QM_{Trat}}{QM_{Erro}},F=QMErro​QMTrat​​,
+em que QMTratQM_{Trat}QMTrat​ representa o quadrado médio entre tratamentos e QMErroQM_{Erro}QMErro​ o quadrado médio residual. Sob H0H_0H0​, essa estatística segue distribuição F de Snedecor, sob os pressupostos usuais do modelo.
+Entretanto, embora a teoria forneça resultados analíticos para a distribuição da estatística FFF, estudos de simulação computacional permitem visualizar de forma prática o comportamento do teste em diferentes cenários experimentais, especialmente quanto ao erro tipo I e ao poder estatístico.
+1.1 Justificativa
+Na prática, muitas aplicações envolvem a comparação simultânea de diferentes tratamentos, métodos ou produtos. Exemplos incluem comparar produtividade agrícola entre fertilizantes, desempenho de algoritmos computacionais, tempo de resposta de medicamentos ou preferência entre marcas de alimentos.
+Quando a hipótese nula é rejeitada pela ANOVA, conclui-se apenas que existe diferença entre pelo menos duas médias, sem indicar quais grupos diferem entre si. Para essa finalidade, utilizam-se procedimentos de comparações múltiplas, entre os quais se destaca o teste de Tukey.
+O teste de Tukey controla a taxa de erro familiar (family-wise error rate), permitindo comparar todos os pares de médias com maior segurança estatística. Assim, sua utilização complementa naturalmente a ANOVA em estudos experimentais.
+Além disso, por meio de simulações, é possível avaliar como fatores como tamanho amostral, magnitude das diferenças entre médias e variabilidade residual influenciam a capacidade da ANOVA e do teste de Tukey em detectar diferenças reais.
+1.2 Poder estatístico da ANOVA
+O poder estatístico de um teste é definido como a probabilidade de rejeitar corretamente a hipótese nula quando ela é falsa. No contexto da ANOVA, o poder depende principalmente de:
+
+
+Magnitude das diferenças entre médias populacionais;
+
+
+Variância residual dos grupos;
+
+
+Tamanho das amostras;
+
+
+Nível de significância adotado;
+
+
+Número de grupos comparados.
+
+
+Em geral:
+
+
+diferenças maiores entre médias aumentam o poder;
+
+
+variabilidade elevada reduz o poder;
+
+
+amostras maiores aumentam a precisão e favorecem a rejeição de H0H_0H0​.
+
+
+Para investigar empiricamente essas relações, pode-se utilizar o seguinte algoritmo de simulação:
+
+
+Gerar amostras aleatórias para kkk grupos com médias previamente definidas;
+
+
+Aplicar o teste ANOVA;
+
+
+Registrar se H0H_0H0​ foi rejeitada;
+
+
+Repetir o processo muitas vezes;
+
+
+Estimar o poder como a proporção de rejeições.
+
+
+1.3 Teste de Tukey
+Quando a ANOVA detecta diferença global significativa, aplica-se o teste de Tukey para identificar quais pares de médias diferem entre si.
+Esse procedimento baseia-se na distribuição do alcance studentizado e compara diferenças absolutas entre médias amostrais com um valor crítico ajustado. Para grupos balanceados, a diferença mínima significativa pode ser expressa por:
+DMS=qα;k;glEQMEn,DMS=q_{\alpha;k;gl_E}\sqrt{\frac{QM_E}{n}},DMS=qα;k;glE​​nQME​​​,
+em que:
+
+
+qα;k;glEq_{\alpha;k;gl_E}qα;k;glE​​ é o quantil da distribuição do alcance studentizado;
+
+
+QMEQM_EQME​ é o quadrado médio do erro;
+
+
+nnn é o tamanho amostral por grupo.
+
+
+Se
+∣Yˉi−Yˉj∣>DMS,|\bar Y_i-\bar Y_j| > DMS,∣Yˉi​−Yˉj​∣>DMS,
+conclui-se que as médias dos grupos iii e jjj diferem significativamente.
+1.4 Objetivos do estudo computacional
+Neste trabalho, serão conduzidos experimentos computacionais com o objetivo de:
+
+
+Avaliar o comportamento da estatística F em diferentes cenários;
+
+
+Estimar o poder estatístico da ANOVA;
+
+
+Investigar o efeito do tamanho amostral sobre a detecção de diferenças;
+
+
+Comparar os resultados globais da ANOVA com as conclusões obtidas pelo teste de Tukey;
+
+
+Ilustrar, por simulação, situações em que a ANOVA detecta diferenças sutis ou evidentes entre tratamentos.
+
+
+2. Estrutura dos experimentos computacionais
+Serão considerados cenários com diferentes combinações de:
+
+
+número de grupos;
+
+
+médias populacionais;
+
+
+variâncias comuns;
+
+
+tamanhos amostrais;
+
+
+intensidade do efeito entre tratamentos.
+
+
+Para cada cenário:
+
+
+Geram-se amostras aleatórias normais independentes;
+
+
+Ajusta-se o modelo ANOVA de um fator;
+
+
+Aplica-se o teste F;
+
+
+Quando significativo, aplica-se o teste de Tukey;
+
+
+Repete-se o processo diversas vezes para estimar frequências de rejeição e poder estatístico.
