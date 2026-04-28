@@ -5,4 +5,10 @@ format: html
 editor: visual
 ---
 
-# ANOVA 
+# Introdução
+ANOVA e Teste Tukey <br>
+
+A análise de variância (ANOVA) é um dos principais métodos para comparação de médias entre múltiplos grupos, permitindo testar a hipótese nula de igualdade entre tratamentos. Embora seus resultados possam ser obtidos analiticamente sob determinados pressupostos, técnicas de simulação computacional possibilitam compreender empiricamente o comportamento do teste em diferentes cenários.
+
+No presente trabalho, serão realizados explorações computacionais para ilustrar o desempenho da ANOVA e do procedimento de comparações múltiplas de Tukey, avaliando seu poder estatístico. Por meio da geração repetida de amostras sob diferentes configurações de médias, variâncias e tamanhos amostrais, busca-se investigar a capacidade desses métodos em detectar diferenças reais entre grupos, bem como o impacto do ajuste para múltiplas comparações promovido pelo teste de Tukey.
+
