@@ -12,3 +12,11 @@ A análise de variância (ANOVA) é um dos principais métodos para comparação
 
 No presente trabalho, serão realizados explorações computacionais para ilustrar o desempenho da ANOVA e do procedimento de comparações múltiplas de Tukey, avaliando seu poder estatístico. Por meio da geração repetida de amostras sob diferentes configurações de médias, variâncias e tamanhos amostrais, busca-se investigar a capacidade desses métodos em detectar diferenças reais entre grupos, bem como o impacto do ajuste para múltiplas comparações promovido pelo teste de Tukey.
 
+
+# Estrutura Anova
+
+# Qual 
+Qual o poder da Anova?
+
+O poder da ANOVA é a probabilidade de o teste detectar diferenças entre médias quando elas realmente existem.
+rejeitar/h0 é falso
