@@ -12,3 +12,56 @@ Encoding: UTF-8
 
 RnwWeave: Sweave
 LaTeX: pdfLaTeX
+
+
+# testando o poder da anova em simulacao
+
+set.seed(123)
+
+nsim <- 100 # quando a amostra eh >= 10000 fica muito pesado - diminuir o numero de simulacoes?
+alpha <- 0.05 
+tam <- c(100, 10000, 1000000) # escolhendo os tamanhos de amostra
+
+medias <- c(10,10,11) # setando medias com diferença para avaliar o poder do teste
+sigma <- 3 # desvio padrao
+
+# Hipoteses
+# H0: medias iguais
+# H1: pelo menos uma media difere
+
+poder <- numeric(length(tam)) # poder do teste é: rejeitar H0/H0 é falsa
+# aqui ele armazena o valor 0 pra todas as posições; depois do looping elas são
+# preenchidas com o poder do teste.
+
+# quando existe diferença entre médias: o resultado esperado é um poder de 
+# teste alto, ou seja, de 100 realizacoes de anova, 90 rejeita H0. Dessa forma,
+# o poder é 0,9 - satisfatório 
+
+for(j in 1:length(tam)){
+  
+  n <- tam[j]
+  rejeita <- numeric(nsim)
+  
+  for(i in 1:nsim){
+    
+    g1 <- rnorm(n,10,sigma)
+    g2 <- rnorm(n,10,sigma)
+    g3 <- rnorm(n,11,sigma)
+    
+    y <- c(g1,g2,g3)
+    grupo <- factor(rep(1:3, each=n))
+    
+    mod <- aov(y~grupo)
+    p <- summary(mod)[[1]][1,5]
+    
+    rejeita[i] <- (p < alpha)
+  }
+  
+  poder[j] <- mean(rejeita)
+}
+
+plot(tam, poder, type="b", pch=19, log="x",
+     xlab="Tamanho amostral (log)",
+     ylab="Poder",
+     main="Poder da ANOVA vs tamanho amostral")
+
