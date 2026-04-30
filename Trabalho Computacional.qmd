@@ -6,17 +6,24 @@ editor: visual
 ---
 
 # Introdução
-ANOVA e Teste Tukey <br>
+Comparação do poder da ANOVA no Delineamento Inteiramente Casualizado e no Delineamento em Blocos Completos Inteiramente Casualizados <br>
 
-A análise de variância (ANOVA) é um dos principais métodos para comparação de médias entre múltiplos grupos, permitindo testar a hipótese nula de igualdade entre tratamentos. Embora seus resultados possam ser obtidos analiticamente sob determinados pressupostos, técnicas de simulação computacional possibilitam compreender empiricamente o comportamento do teste em diferentes cenários.
+A análise de variância (ANOVA) constitui uma das principais ferramentas para a comparação de médias entre múltiplos grupos, sendo amplamente utilizada em planejamento de experimentos. Diferentes delineamentos experimentais, como o delineamento inteiramente casualizado (DIC) e o delineamento em blocos casualizados (BIC), apresentam estruturas distintas para o controle da variabilidade, o que pode influenciar diretamente o desempenho do teste F. Embora os resultados teóricos da ANOVA sejam bem estabelecidos sob pressupostos clássicos, a utilização de simulação computacional permite investigar, de forma empírica, o comportamento do teste em diferentes cenários.
 
-No presente trabalho, serão realizadas explorações computacionais para ilustrar o desempenho da ANOVA e do procedimento de comparações múltiplas de Tukey, avaliando seu poder estatístico. Por meio da geração repetida de amostras sob diferentes configurações de médias, variâncias e tamanhos amostrais, busca-se investigar a capacidade desses métodos em detectar diferenças reais entre grupos, bem como o impacto do ajuste para múltiplas comparações promovido pelo teste de Tukey.
+No presente trabalho, serão realizados estudos de simulação Monte Carlo com o objetivo de comparar o poder do teste F da ANOVA nos delineamentos DIC e BIC. Por meio da geração repetida de amostras sob diferentes configurações de médias dos tratamentos, variâncias residuais, efeitos de blocos e tamanhos amostrais, busca-se avaliar a capacidade do teste em detectar diferenças reais entre grupos.
 
 
-# Estrutura Anova
+# Modelos estatísticos DIC e BIC
 
-# Qual 
-Qual o poder da Anova?
+# Definição dos valores teóricos
+(para ter uma base de comparação)
 
-O poder da ANOVA é a probabilidade de o teste detectar diferenças entre médias quando elas realmente existem.
-rejeitar/h0 é falso
+# Simulações
+gerar dados segundo o modelo, ajustar anova, testar h0, registrar rejeição, repetir, proporção 
+
+podemos fazer para diferentes números de repetições, número de blocos, variância residual (separadamente)
+
+# Resultados
+Comparar os modelos
+efeito dos blocos
+efeito do numero de repetições
