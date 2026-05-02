@@ -183,6 +183,9 @@ proximo passo: aumentar variancia do bloco - deve melhorar o poder do dbc em
 
 relacao ao dic...
 
+
+# Cris: Rascunhos
+
 # Simulações
 
 gerar dados segundo o modelo, ajustar anova, testar h0, registrar rejeição, repetir, proporção
