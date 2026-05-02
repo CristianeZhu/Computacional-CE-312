@@ -8,9 +8,167 @@ editor: visual
 # Introdução
 Comparação do poder da ANOVA no Delineamento Inteiramente Casualizado e no Delineamento em Blocos Completos Inteiramente Casualizados <br>
 
-A análise de variância (ANOVA) constitui uma das principais ferramentas para a comparação de médias entre múltiplos grupos, sendo amplamente utilizada em planejamento de experimentos. Diferentes delineamentos experimentais, como o delineamento inteiramente casualizado (DIC) e o delineamento em blocos casualizados (BIC), apresentam estruturas distintas para o controle da variabilidade, o que pode influenciar diretamente o desempenho do teste F. Embora os resultados teóricos da ANOVA sejam bem estabelecidos sob pressupostos clássicos, a utilização de simulação computacional permite investigar, de forma empírica, o comportamento do teste em diferentes cenários.
+ Notas:
+ Ideias iniciais de simulação: valores fixos de variancia, efeitos e amostra -> <br>
+ poder do teste pra esses diferentes casos <br>
+ Aumentar numero de simulacoes? <br>
 
-No presente trabalho, serão realizados estudos de simulação Monte Carlo com o objetivo de comparar o poder do teste F da ANOVA nos delineamentos DIC e BIC. Por meio da geração repetida de amostras sob diferentes configurações de médias dos tratamentos, variâncias residuais, efeitos de blocos e tamanhos amostrais, busca-se avaliar a capacidade do teste em detectar diferenças reais entre grupos.
+
+
+ Desempenho de delineamentos pelo poder de teste: <br>
+ uma simulação da comparação entre o delineamento inteiramente casualizado (DIC) e o blocos completos casualizados (DBC)
+
+# Contextualização:
+ Entre os delineamentos mais utilizados no planejamento de experimentos estão
+ o delineamento inteiramente casualizado (DIC) e o delineamento em blocos
+ completos casualizados (DBC). Ambos têm como objetivo avaliar possíveis
+ diferenças entre tratamentos, o que é chamado de efeito do tratamento,
+ geralmente por meio da análise de variância (ANOVA). <br>
+
+ No DIC, tem-se que as unidades experimentais — onde são aplicados os tratamentos —
+ são homogêneas, pois a variabilidade observada é atribuída de forma única aos
+ tratamentos e ao erro aleatório. Já o DBC incorpora uma estrutura adicional ao
+ modelo ao considerar a existência de blocos, grupos de unidades experimentais
+ homogêneas entre si, mas heterogêneas entre os grupos. Dessa forma, nesse
+ delineamento, almeja-se controlar fatores externos de influência, reduzindo a
+ variabilidade residual e, consequentemente, aumentando a precisão das estimativas
+ dos efeitos dos tratamentos. <br>
+
+ Na prática, o impacto dos efeitos dos tratamentos, a variabilidade experimental
+ e a relevância da estrutura de blocos aplicada raramente são conhecidos
+ previamente. Esses fatores influenciam diretamente o desempenho dos testes
+ estatísticos, especialmente no que se refere ao poder do teste, definido como
+ a probabilidade de rejeitar a hipótese nula quando ela é falsa. <br>
+
+ Pensando nisso, a simulação computacional surge como uma ferramenta essencial
+ para a avaliação do poder dos testes em diferentes cenários.
+ Por meio da geração de múltiplos dados, é possível investigar como diferentes
+ níveis de variabilidade e estruturas experimentais impactam o desempenho dos
+ delineamentos. <br>
+
+ Assim, o objetivo das simulações é comparar o poder do teste de hipóteses
+ associado aos delineamentos inteiramente casualizado e em blocos completos
+ casualizados, considerando diferentes combinações de variabilidade e efeitos
+ de tratamento. Dessa maneira, a escolha adequada do delineamento se torna mais
+ precisa e confiável, gerando resultados mais satisfatórios ao conduzir um experimento.
+
+
+set.seed(123)
+
+# -----------------------------
+# parâmetros para o primeiro teste
+# -----------------------------
+
+n_trat <- 4
+n_rep  <- 5
+n_sim  <- 100 # aumentar
+alpha  <- 0.05 # simular mais de um alpha?
+
+# -----------------------------
+# efeitos e variancias
+# -----------------------------
+
+lista_efeitos <- list(
+  pequeno = c(0, 0.5, 1, 1.5),
+  medio   = c(0, 1, 2, 3),
+  grande  = c(0, 2, 4, 6)
+)
+
+valores_sigma <- c(1, 2, 4)
+valores_sigma_bloco <- c(0, 1, 3, 5)
+
+# -----------------------------
+# simulação
+# -----------------------------
+
+simular_poder <- function(efeito, sigma, sigma_bloco) {
+  
+  rejeita_dic <- numeric(n_sim)
+  rejeita_dbc <- numeric(n_sim)
+  
+  for (s in 1:n_sim) {
+    
+    # ----- DIC -----
+    trat <- factor(rep(1:n_trat, each = n_rep))
+    y_dic <- efeito[trat] + rnorm(n_trat * n_rep, 0, sigma)
+    
+    mod_dic <- aov(y_dic ~ trat)
+    p_dic <- summary(mod_dic)[[1]][["Pr(>F)"]][1]
+    
+    rejeita_dic[s] <- (p_dic < alpha)
+    
+    
+    # ----- DBC -----
+    bloco <- factor(rep(1:n_rep, times = n_trat))
+    trat2 <- factor(rep(1:n_trat, each = n_rep))
+    
+    efeito_bloco <- rnorm(n_rep, 0, sigma_bloco)
+    
+    y_dbc <- efeito[trat2] +
+      efeito_bloco[bloco] +
+      rnorm(n_trat * n_rep, 0, sigma)
+    
+    mod_dbc <- aov(y_dbc ~ trat2 + bloco)
+    p_dbc <- summary(mod_dbc)[[1]][["Pr(>F)"]][1]
+    
+    rejeita_dbc[s] <- (p_dbc < alpha)
+  }
+  
+  return(c(
+    poder_dic = mean(rejeita_dic),
+    poder_dbc = mean(rejeita_dbc)
+  ))
+}
+
+# -----------------------------
+# resultados
+# -----------------------------
+
+resultados <- data.frame()
+
+for (nome_efeito in names(lista_efeitos)) {
+  
+  efeito <- lista_efeitos[[nome_efeito]]
+  
+  for (sigma in valores_sigma) {
+    
+    for (sigma_bloco in valores_sigma_bloco) {
+      
+      poder <- simular_poder(efeito, sigma, sigma_bloco)
+      
+      resultados <- rbind(
+        resultados,
+        data.frame(
+          efeito = nome_efeito,
+          sigma = sigma,
+          sigma_bloco = sigma_bloco,
+          DIC = poder[["poder_dic"]],
+          DBC = poder[["poder_dbc"]]
+        )
+      )
+    }
+  }
+}
+
+print(resultados)
+
+# -----------------------------
+# conclusoes
+# -----------------------------
+
+# efeito pequeno -> detecção de poder comprometida, 
+# independentemente do delineamento -> não confiável
+
+
+# efeito médio -> poder impactado pelo ruído, mas mesmo assim muito variável
+# diferenca pequena no dic e dbc
+
+# efeito grande -> deteccao facil de poder
+# DBC não melhorou o poder de forma consistente, entao os blocos nao foram fator de controle
+
+
+# proximo passo: aumentar variancia do bloco - deve melhorar o poder do dbc em
+# relacao ao dic...
 
 
 # Modelos estatísticos DIC e BIC
