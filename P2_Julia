@@ -832,3 +832,66 @@ onde se incorpora uma estimativa robusta da curtose (κ₄), com ajuste para amo
 A curtose pode ser estimada dos dados ou combinada com informação prévia de estudos anteriores.
 
 
+library(MASS)  # para distribuições
+
+# ============================================
+# FUNÇÃO PRINCIPAL - Equação (4) de Bonett
+# ============================================
+
+bonett_ci <- function(y, conf = 0.95) {
+  n <- length(y)
+  alpha <- 1 - conf
+  z <- qnorm(1 - alpha/2)
+  
+  # Variância amostral
+  s2 <- var(y)
+  
+  # Curtose (eq. 2) com média aparada
+  trim <- 1 / (2 * sqrt(n - 4))
+  m <- mean(y, trim = trim)
+  k4 <- n * sum((y - m)^4) / (sum((y - mean(y))^2))^2
+  
+  # Ajustes
+  c_adj <- n / (n - z)
+  se <- sqrt((k4 - (n-3)/n) / (n-1))
+  
+  # Intervalo para sigma (raiz quadrada)
+  lower <- sqrt(exp(log(c_adj * s2) - z * se))
+  upper <- sqrt(exp(log(c_adj * s2) + z * se))
+  
+  return(c(lower = lower, upper = upper))
+}
+
+# ============================================
+# SIMULAÇÃO - Taxa de cobertura por distribuição
+# ============================================
+
+simular_cobertura <- function(dist, n, sigma_verdadeiro, B = 10000) {
+  acertos <- 0
+  for (i in 1:B) {
+    y <- dist(n)
+    ic <- bonett_ci(y)
+    if (ic["lower"] <= sigma_verdadeiro & sigma_verdadeiro <= ic["upper"])
+      acertos <- acertos + 1
+  }
+  return(acertos / B)
+}
+
+# ============================================
+# RODANDO PARA DIFERENTES DISTRIBUIÇÕES (n=25)
+# ============================================
+
+n <- 25
+
+resultados <- data.frame(
+  Distribuicao = c("Normal", "Uniforme", "Laplace", "Exponencial", "t(5)"),
+  Cobertura = c(
+    simular_cobertura(function(n) rnorm(n, sd=1),          n, sigma=1),
+    simular_cobertura(function(n) runif(n, 0, 1),          n, sigma=sqrt(1/12)),
+    simular_cobertura(function(n) rexp(n,1) - rexp(n,1),   n, sigma=sqrt(2)),
+    simular_cobertura(function(n) rexp(n, rate=1),         n, sigma=1),
+    simular_cobertura(function(n) rt(n, df=5),             n, sigma=sqrt(5/3))
+  )
+)
+
+print(resultados)
