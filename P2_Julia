@@ -1,3 +1,6 @@
+erro tipo I/poder: mean(pvalor<alpha)
+erro tipo II: mean(pvalor>alpha)
+
 erro tipo I medias iguais
 n <- 15
 N <- 10000
