@@ -1,0 +1,290 @@
+---
+title: "Prova 2 2025"
+author: "Cristiane Zhu"
+format: html
+editor: visual
+---
+
+# Questão 1
+
+```{r}
+yb <- rbeta(1e6,2,6)
+
+################
+mean(yb > 0.63) ## a. P(yb > 0.63)
+pbeta(0.63,2,6, lower.tail = FALSE)
+
+#################
+mean(yb) ## b.E(yb)
+alpha <- 2
+beta<- 6
+(esp <- alpha/(alpha + beta))
+
+################
+mean(yb > 0.25 & yb < 0.50) ## c. P( 0.25 < yb < 0.5)
+diff(pbeta(c(0.25, 0.5),2,6))
+
+#################
+mean(yb[yb < 0.8] > 0.45) ## d.P(yb > 0.45| yb < 0.8)
+diff(pbeta(c(0.45,0.8),2,6)) / pbeta(0.8,2,6)
+
+##############
+mean(yb[yb > 0.3]) ## e.média dos valores de yb maiores q 0.3 E(y|y > 0.3)
+integrate(function(y) y*dbeta(y,2,6),0.3,1)$value / pbeta(0.3,2,6,lower.tail=FALSE)
+
+#################
+y1 <- rexp(1e5, rate = 1/2)
+y2 <- rexp(1e5, rate = 1/2)
+y3 <- rexp(1e5, rate = 1/5)
+
+##################
+var(y3) ## f. variância de y3
+1/(1/5)^2 # var de uma exp, 1/lambda^2
+
+###################
+mean(y1) + mean(y2) + mean(y3) ## g. soma das médias das amostras
+1/(1/2) + 1/(1/2)+ 1/(1/5) # média de exp, 1/lambda
+
+##########################
+mean(y1 + y2 > 0) ## h. P(y1+y2 > 0)
+pgamma(0,2, 1/2, lower.tail = FALSE)
+
+#################3
+I2 <- (y2 > 2) # todos valores de y2 q são maiores q 2
+
+######################
+mean(I2) ## i. E(I2)
+esp <- 
+
+#########################33
+mean(y1[y1 + y2 > 3]) ## j.
+
+##
+
+yg <- rgamma(1e5, 2, 0.5)
+
+##############
+100*sd(yg)/mean(yg) ## k. coeficiente de variação
+alpha <- 2
+beta <- 0.5
+cv <- 100*((sqrt(alpha/(beta^2)))/(alpha/beta))
+cv
+
+####################
+quantile(yg, prob = 0.95) ## l. 95% dos dodos estão estão abaixo de 9.49
+qgamma(0.95, 2,0.5)
+
+#####################
+diff(quantile(yg, prob = c(0.25, 0.75))) ## m. amplitude interquartílica
+diff(qgamma(c(0.25, 0.75),2,0.5))
+
+##########################
+temp <- yg[yg < 7.5] # valores de yg que são menores q 7.5
+
+#####################
+mean(temp > 3.5 & temp < 6) ## n. P(3.5 < yg < 6| yg < 7.5)
+diff(pgamma(c(3.5,6),2, 0.5))/ pgamma(7.5,2,0.5)
+
+
+#####################3
+var(yg[yg > 3 & yg < 10]) ## o. variancia dos valores maior q 3 e menor q 10
+
+
+##
+x <- rpois(1e5, lam = 5.2)
+mean(x > 3) ## p. P(x > 3)
+ppois(3, 5.2, lower.tail = FALSE)
+
+#####################
+mean(x[x > 0] > 3) ## q. P(x > 3 | x > 0)
+ppois(3,5.2, lower.tail = FALSE)/ppois(0, 5.2, lower.tail =  FALSE)
+
+######################
+lam <- rgamma(1e5, 3, 1)
+y <- rpois(1e5, lam = lam) ## distribuição de y|lambda, logo, y tem distribuição binomial negativa (3,1/2)
+nb(r= alpha, p = beta/(beta+1))
+#####################33
+mean(y) ## r. E(y)
+# teórico, próprio lambda,
+esperanca(y) <- 3/1
+
+##########################
+mean(y > 3) ## s. (difere de p.?) Sim, pois aqui cada lambda recebe um valor diferente que segue uma distribuição gamma
+
+pnbinom(3, 3, 1/2, lower.tail = FALSE) ### nb(r= alpha, p = beta/(beta+1))
+
+#########################
+mean(y[y > 0] > 3) ## t. (difere de q.?) Sim, pois aqui cada lambda recebe um valor diferente que segue uma distribuição gamma
+(1 - pnbinom(3, size = 3, prob = 1/2)) /
+  (1 - pnbinom(0, size = 3, prob = 1/2))
+
+##
+plot(density(lam)) ## u. gráfico de densidade empírica de obs simulados de uma distribuição gamma(3,1)
+plot(density(lam[y == 2])) ## v. gráfico de densidade de obs de uma distribuição gamma(3,1) dado que y= 2
+
+####################
+mean(lam) ## y. esperança
+esp_Lam  <- 3/1
+
+#########
+mean(lam[y == 2]) ## w. esperança de lambda| y=2
+#(lambda/Y=y ~ Gamma(alpha+y, beta+1))
+(esp <- (3+2)/(1+1))
+
+###################
+mean(lam[y == 2] > 3.5) ## x P(lam > 3.5| y = 2)
+
+1 - pgamma(3.5, shape = 5, rate = 2) #(lambda/Y=y ~ Gamma(alpha+y, beta+1))
+
+```
+# Questão 2
+```{r}
+# y~ exp(lambda)
+# P(Y < 2) = 0.20
+# n = 50
+## Calcular probablidades de eventos de risco, P(Y>10)
+## Avaliar o erro da estimativa
+
+# Primeiro, qual o lambda? teste
+pexp(2,0.112)
+
+## Valor exato
+lambda <- -log(0.80)/2
+lambda
+
+# Agora com o lambda, gerar 50 obs aleatórias de distribuição exp 
+y <- rexp(50,lambda)
+
+# Calcular a prob de eventos de risco (y > 10)
+p <- mean(y > 10)
+
+# Estimativa do erro, erro padrão
+ep <- sqrt(p*(1-p)/50)
+ep
+## Erro padrão de aproximadamente 0.068 (varia)
+
+# Avaliação do tamanho amostral
+## Pela amplitude do intervalo de confiança
+Ic <-  c(p - 1.96*ep,
+        p + 1.96*ep)
+Ic
+## Como o intervalo está levemente grande, seria bom aumentar n
+```
+
+
+# Questão 3
+```{r}
+# Modelo de regressão: Yi = b0 +b1x1 + erro
+n <- 10
+alpha <- 0.05
+erro <- rt(n,3)
+k <- 1e4
+b0 <- 10
+b1 <- 0.5
+x <- rnorm(n, mean = 0, sd = 1)
+## definir o modelo de regressão
+Yi <- b0 + b1*x + erro
+
+## ajustar o modelo
+modelo <-lm(Yi ~ x)
+
+## Intervalo de confiança para b1
+IC <- b1 +- qt(1-alpha/2, n-2) * 
+
+## Simular várias vezes
+sim2 <- replicate(k,{
+  erro <- rt(n,df = 3)
+  yi <- b0 + b1*x + erro
+  modelo <-lm(yi ~ x)
+  b1_est <- coef(modelo)[2]
+  ep <- summary(modelo)$coefficients[2,2]
+  li <- b1_est - qt(1-alpha/2, n-2) * ep
+  ls <- b1_est + qt(1-alpha/2, n-2) * ep
+  b1 >= li & b1 <= ls
+})
+
+modelo
+mean(sim2) ## 0.949
+
+## Após avaliar a taxa de cobertura, foi possível verificar que a taxa de cobertura realmente foi dos 95% esperados, ent 95% dos intervalos contém o valor verdadeiro de b1
+```
+
+```{r}
+## Erro tipo I, Rejeitar H0 dado que H0 é verdadeiro
+b1_0 <- 0.5     # valor testado em H0
+b1_alt <- 0.8   # valor verdadeiro sob H1
+
+erro_tipo1 <- replicate(k,{
+  erro <- rt(n,3)
+  Yi <- b0 + b1_0*x + erro
+  modelo <-lm(Yi ~ x)
+  b1_est <- coef(modelo)[2]
+  ep <- summary(modelo)$coefficients[2, 2]
+  tcalc <- (b1_est - b1_0) / ep
+  t_crit<-  qt(1-alpha/2, n-2)
+  abs(tcalc) > t_crit
+})
+mean(erro_tipo1)
+## Em cerca de 5%, o teste rejeitou H0 mesmo sendo verdadeiro
+```
+
+```{r}
+## Erro tipo 2, Não rejeitar H0 dado que ele é falso
+erro_tipo2 <- replicate(k, {
+  erro <- rt(n, 3)
+  y <- b0 + b1_alt*x + erro
+  
+  modelo <- lm(y ~ x)
+  
+  b1_est <- coef(modelo)[2]
+  ep <- summary(modelo)$coefficients[2, 2]
+  
+  tcalc <- (b1_est - b1_0) / ep
+  t_crit<-  qt(1-alpha/2, n-2)
+  abs(tcalc) <= t_crit
+})
+
+mean(erro_tipo2)
+## Cerca de 92% dos testes não rejeita H0 sabendo que ele é falso
+```
+
+# Questão 4
+
+```{r}
+# Se eu repetir o experimento muitas vezes, o IC de 95% para a variância contém a variância verdadeira em aproximadamente 95% dos casos?
+
+## Para verificar se o intervalo de confiança de certa porcentagem contem o vdd valor da variancia em aproximadamente a mesma porcentegem pode ser feita uma simulação calculando uma amostra que tenha uma distribuição diferente da normal, calcular a variancia e os limites inferior e superior. Verificar quais valores estão dentro do intervalo de confiança e depois repetir todo esse procedimento várias vezez. Assim, podemos calcular a propoção de vezes em que a variancia verdadeira esta dento do intervalo
+
+## Fixar valores
+k <- 1e6
+alpha <- 0.05
+n <- 100
+sigma_vdd <- 6
+
+## amostra n normal
+amostra <- rchisq(n,3)
+
+## Variância
+(s <- var(amostra))
+
+## Intervalos de confiança
+li <- ((n-1)* s)/qchisq(1-alpha/2, df= n-1)
+ls <- ((n-1)* s)/qchisq(alpha/2, df= n-1)
+ic <- c(li,ls)
+ic
+
+# Taxa de cobertura
+cobertura <- sigma_vdd >= li & sigma_vdd <= ls
+
+## Repetir varias vezes
+sim <- replicate(k,{
+  amostra <- rchisq(n,3)
+  s <- var(amostra)
+  li <- ((n-1)* s)/qchisq(1-alpha/2, df= n-1)
+  ls <- ((n-1)* s)/qchisq(alpha/2, df= n-1)
+  cobertura <- sigma_vdd >= li & sigma_vdd <= ls
+})
+mean(sim) ## 0.75
+## Resultado:Apenas 75% dos intervalos continham a variância verdadeira, apesar do intervalo ter sido construído com nível nominal de 95%. Logo, foi possível verificar que para distribuição não normal, a taxa de cobertura foi menor do que os 95% esperados
+```
+
