@@ -38,9 +38,169 @@ for (i in 1:N){
 erro_tipo1 <- mean(prop)
 
 
-poder do teste
-questao 4
-prova 1
+
+
+-----------------------------------------------------------------------------------------------------------
+2025
+
+## Questao 1
+Simulações de Monte Carlo podem ser usadas para estimar/aproximar quantidades relacionadas a distribuições de probabilidades. Os comandos a seguir ilustram tal fato com diversas aproximações. Em cada item fornecer:
+
+a. a quantidade sendo calculada, utilizando notação adequada;
+b. resultados teóricos ou comandos para cálculos das quantidades sem aproximação por simulação.
+
+```{r}
+yb <- rbeta(1e6, 2, 6)
+# yb eh uma var que segue uma distribuicao beta aleatoria com n=1e6 e parametros 2 e 6
+mean(yb > 0.63) 
+# prob de yb ser maior que 0.63 - proporcao dos 1e6 valores que sao maiores qu 0.63
+mean(yb)
+# media de yb
+mean(yb > 0.25 & yb < 0.50)
+#prob de yb estar entre 0.25 e 0.5
+mean(yb[yb < 0.8] > 0.45)
+# prob de yb>0.45 dado que é <0.8
+mean(yb[yb > 0.3])
+# yb > 0.3: true or false, yb: mantem os true, mean calcula a media
+```
+
+```{r}
+y1 <- rexp(1e5, rate = 1/2)
+y2 <- rexp(1e5, rate = 1/2)
+y3 <- rexp(1e5, rate = 1/5)
+# var exponencial aleatoria de tamanho 1e5 e lambda 1/2 (taxa)
+
+var(y3) # variancia de y3
+mean(y1) + mean(y2) + mean(y3) # soma das medias
+mean(y1 + y2 > 0) # pega a soma de y1i com y2i (pares), esse novo vetor derivado dessa soma tem 1e5 valores: verifica-se quais sao > 0 (true or false) e faz a média -> resultado é 1 porque exp é >0
+I2 <- (y2>2) # var logica com true para y2>2 e false caso contrario 
+mean(I2) # media de I2
+mean(y1[y1 + y2 >3]) # media dos valores de y1 tendo o par y1+y2 >3
+```
+
+```{r}
+yg <- rgamma(1e5, 2, 0.5)
+100*sd(yg)/mean(yg) #coef de variacao
+quantile(yg, prob = 0.95) # quantil 0.95 de yg -> 5% dos valores sao maiores que o valor retornado
+diff(quantile(yg, prob = c(0.25, 0.75))) # amplitude interquartilica
+temp <- yg[yg<7.5] # cria um vetor logico que retorna true or false pra yg<7.5, temp eh a var (vetor) que recebe os TRUE
+mean(temp > 3.5 & temp < 6) #prob de temp estar entre 3.5 e 6 / prop de TRUE
+var(yg[yg > 3 & yg < 10]) # variancia dos valores de yg que estao entre 3 e 10
+```
+
+```{r}
+x <- rpois(1e5, lam = 5.2) # x segue uma poisson aleatoria com 1e5 amostras e lambda = 5.2
+mean(x>3) #proporcao/prob de x>3 (xi> 3 eh true e xi<3 eh false)
+mean(x[x>0]>3) # p(x>3|x>0)
+```
+
+```{r}
+lam <- rgamma(1e5, 3, 1) # lam segue uma gamma aleatoria 3,1
+y <- rpois(1e5, lam = lam) # y segue uma poisson de parametro lam -> var, isso resulta em uma binomial negativa
+mean(y) # media de y = lam
+mean(y>3)           # difere de mean(x>3)? sim, a nao ser que a media de lam fosse 5.2
+mean(y[y>0] > 3)    # difere de mean(x[x>0]>3)? sim
+```
+
+```{r}
+plot(density(lam)) #grafico de densidade de lam - kernel
+plot(density(lam[y == 2])) # grafico de densidade dos valores de lam que geraram y = 2
+mean(lam) # esperanca de lam
+mean(lam[y == 2]) # esperanca dos valores de lam que geraram y = 2
+mean(lam[y == 2] > 3.5) # proporcao dos valores de (lam que geraram y = 2) maiores que 3.5
+```
+
+## 2)
+Resumo: 
+1. λ = -ln(0.8)/2
+2. p_teórico = exp(-λ * 10)
+3. n = 50, N = 10000
+4. Para i de 1 até N:
+     amostra = rexp(n, λ)
+     p_hat[i] = mean(amostra > 10)
+5. p_estimado = mean(p_hat)
+6. erro_padrao = sd(p_hat) / sqrt(N)
+7. viés = p_estimado - p_teórico
+8. erro_absoluto = |p_estimado - p_teórico|
+
+y <- exp(lambda) tal que p(y<2) = 0.2.
+como p(y<2) = 0.2, 
+0.2 = 1 - e^(-lambda*2), 
+entao e^(-lambda*2) = 0,8...
+... -lam*2 = ln(0,8) 
+lam*2 = -ln(0,8)
+lam = -ln(0,8)/2
+
+```{r}
+set.seed(123)
+(lam <- (-log(0.8)/2))
+```
+
+Probabilidade de risco: (para uma amostra)
+```{r}
+y <- rexp(50, lam)
+(p_risco <- mean(y>10))
+```
+
+Para a simulacao:
+```{r}
+n <- 50                # tamanho de cada amostra
+N <- 10000         # número de repetições Monte Carlo
+```
+
+pseudo codigo:
+
+Criar vetor vazio chamado prop_risco de tamanho N
+
+Para cada simulação i DE 1 ATÉ N:
+    
+    Gerar uma amostra de tamanho n da exp(lambda)
+    amostra <- gerar n valores da Exponencial(rate = lambda)
+    
+    Calcular proporção de valores > 10 dentro da amostra
+    p_i <- (número de elementos em amostra > 10) / n
+    
+    # Armazenar resultado
+    prop_risco[i] <- p_i
+
+Estimativas e propriedades:
+# Estimativa pontual (não viciada)
+p_estimado <- média(prop_risco)
+
+# Erro padrão da estimativa (variabilidade entre amostras)
+# Fórmula: EP = desvio_padrão(prop_risco) / sqrt(R_sim)
+erro_padrao <- sd(prop_risco) / sqrt(R_sim)
+
+# Erro absoluto da estimativa (comparando com valor teórico, se conhecido)
+erro_absoluto <- |p_estimado - p_teorico|
+
+# Intervalo de confiança para P(Y > 10)
+# Usando aproximação normal (Teorema Central do Limite)
+definir nivel_confianca
+ic_inferior <- p_estimado - qnorm(1 - (1 - nivel_confianca)/2) * erro_padrao
+ic_superior <- p_estimado + qnorm(1 - (1 - nivel_confianca)/2) * erro_padrao
+
+n=50...
+# Para decidir se n = 50 é adequado, podemos:
+
+# Opção A: Analisar erro padrão atual
+SE erro_padrao < 0,01 ENTÃO
+    Escrever n = 50 é adequado
+SENÃO
+    Escrever n = 50 pode ser pequeno
+
+# Opção B: Comparar com outros valores de n (estudo de sensibilidade)-> melhor
+Definir n_test <- [10, 20, 30, 50, 100, 200, 500]
+
+PARA CADA n_atual EM n_test:
+    
+    Repetir simulação (PASSO 3) usando n_atual no lugar de n
+    Calcular erro_padrao_atual
+    
+    # Verificar convergência: erro_padrao diminui com n?
+    # Teoricamente, erro_padrao ∝ 1/√n para proporção amostral
+
+ -------------------------------------------------------------------------------------------------------------------------------------
 
 
 
