@@ -1,0 +1,834 @@
+Lista 4:
+# Estimando π com uma moeda
+Considere o experimento aleatório que consiste em lançar uma moeda até que a proporção de “caras” seja maior que 0,5, ou seja, que o número acumulado de caras seja maior que o número de coroas. Registra-se a fração de “caras” obtidas. Por exemplo se a sequência (coroa, cara, coroa, cara, cara) é obtida, o resultado registrado é 3/5. Se o experimento é repetido, a média dos resultados se aproxima de π/4
+```{r}
+set.seed(123)
+N <- 10000
+prop_caras <- numeric(N)
+
+for (i in 1:N){
+  caras <- 0
+  total <- 0
+  
+  repeat{
+  lancamento <- sample(c("cara", "coroa"), 1) # 1 por vez
+  total <- total + 1
+  
+  if (lancamento == "cara"){
+    caras <- caras + 1
+  }
+  
+  coroas <- total - caras
+  if(caras > coroas) break
+  
+  prop_caras[i] <- caras/total
+  }
+}  
+(estimativa_pi <- mean(prop_caras)*4)
+```
+
+-------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+Lista 6:
+
+definir cenário verdadeiro
+
+gerar dados aleatórios
+
+aplicar método
+
+guardar resultado
+
+repetir muitas vezes
+
+calcular proporção ou média final
+
+# 1- Distribuição amostral da média
+
+A figura a seguir copiada do livro Estatística Básica dos Profs Wilton Bussab e Pedro Morettin (Bussab and Morettin 2017) é uma ilustração do Teorema Central do Limite. Faça um código computacional para produzir um resultado semelhante.
+
+```{r}
+par(mfrow = c(1, 4))
+
+pop <- (runif(1e6,0,1)) # a populacao é uma uniforme aleatoria (0,1) de tamanho 1000000 
+hist(pop)
+
+un2 <- replicate(5000,mean(runif(2,0,1)))
+hist(un2)
+
+un5 <- replicate(5000, mean(runif(5,0,1)))
+hist(un5)
+
+un25 <- replicate(5000,mean(runif(25,0,1)))
+hist(un25)
+
+
+## Função
+sim1 <-function(n, repl = 1e4){
+  replicate(repl, mean(runif(n,0,1)))
+}
+
+teste <- sim1(5) 
+hist(teste)
+```
+
+exponencial
+```{r}
+pop2 <- rexp(1e6, 1)
+hist(pop2)
+
+un2.2 <- replicate(5000, mean(rexp(2,1)))
+hist(un2.2)
+
+un10.2 <- replicate(5000, mean(rexp(10,1)))
+hist(un10.2)
+
+
+un30.2 <- replicate(5000, mean(rexp(30,1)))
+hist(un30.2)
+```
+
+qui quadrado
+
+```{r}
+pop3 <- rchisq(1e6, 5)
+hist(pop3)
+
+un3.3 <-replicate(5000,mean(rchisq(3,5)))
+hist(un3.3)
+
+un5.3 <-replicate(5000,mean(rchisq(5,5)))
+hist(un5.3)
+
+un10.3 <-replicate(5000,mean(rchisq(10,5)))
+hist(un10.3)
+```
+
+mista
+```{r}
+pop4 <- rnorm(5e5,-2,1)
+pop5 <- rnorm(5e5, 2,1)
+
+pop45 <- c(pop4,pop5)
+
+hist(pop45)
+
+## ou
+## dividir o n de amostras
+w <- 0.5
+n <- 10000
+
+n1 <- (w*n)
+n2 <- (1-w) * n
+
+x <- c(rnorm(n1,-2,1),rnorm(n2, 2,1))
+hist(x)
+
+
+un5.4 <- 
+
+un15.4 <-replicate(5000,mean(c(rnorm(15,-2,1), rnorm(15,2,1))))
+hist(un15.4)
+
+un25.4 <-replicate(5000,mean(c(rnorm(25,-2,1), rnorm(25,2,1))))
+hist(un25.4)
+```
+
+
+# 2- Distribuição amostral da variância
+
+## 2.1 Verificando propriedades do estimador
+
+```{r}
+## Dados iniciais, cenário vdd
+set.seed(123)
+N <- 1000000
+n <- 10
+mu <- 70
+sigma <- 10 # variância vdd = 100
+tam <- c(10, 20, 30)
+
+# Cálculos cenário verdadeiro/teórico
+## E[S^2] = 100
+
+## Var(S^2) = 2sigma^4/n-1
+(Var_vdd = (2* sigma^4)/ (n-1))
+#2222.222
+
+# Gerar amostra 
+amostra <- replicate(N,{ 
+  y <- rnorm(n,m = mu, sd = sigma)
+  var(y)})
+
+
+## Aplicar fórmulas p calcular oq foi pedido e verificar se os resultados chegam perto do cenário real
+(media_est = mean(amostra)) #100.0737
+(vies <- mean(amostra)- sigma^2) #0.07365808
+(variancia = var(amostra)) #2221.741
+(ep = sd(amostra)) # 47.13535
+(eqm = mean((amostra-(sigma^2))^2))
+
+## não viciado E(S^2)= sigma^2
+(media_est <- mean(amostra))
+
+## viés (tem q ser quse 0 aqui)
+(vies <- mean(amostra)- sigma^2)
+
+## variância/erro padrão
+(variancia = var(amostra))
+(ep <- sd(amostra))
+
+## erro quadrático médio
+(eqm <- mean((amostra-(sigma^2))^2))
+
+## eficiência e consistência
+```
+
+```{r}
+## Para n = 20
+n20 <- 20
+# Gerar amostra 
+amostra20 <- replicate(N,{ 
+  y <- rnorm(n20,m = mu, sd = sigma)
+  var(y)})
+
+
+## Aplicar fórmulas p calcular oq foi pedido e verificar se os resultados chegam perto do cenário real
+media_est = mean(amostra20)
+vies <- mean(amostra20)- sigma^2
+variancia = var(amostra20)
+ep = sd(amostra20)
+eqm = mean((amostra20-(sigma^2))^2)
+
+## não viciado E(S^2)= sigma^2
+(media_est <- mean(amostra20))
+
+## viés (tem q ser quse 0 aqui)
+(vies <- mean(amostra20)- sigma^2)
+
+## variância/erro padrão
+(variancia = var(amostra20))
+(ep <- sd(amostra20))
+
+## erro quadrático médio
+(eqm <- mean((amostra20-(sigma^2))^2))
+
+```
+
+## 2.2 Comparando estimadores
+
+```{r}
+## Gerar dados reais
+N <- 10000
+n <- 10
+mu <- 70
+sigma <- 10
+
+## Gerar amostras
+amostra2 <- replicate(N,{
+  y <- rnorm(n, mu, sigma)
+  var1 <-sum((y - mean(y))^2)/n
+  var2 <- (sum((abs(y - mean(y)))/n))^2
+  c(var1 = var1,var2 =var2)})
+
+## não viciado E(S^2)= sigma^2 (é necessário usar apply pq se for usar mean direto, ele vai fazzer p todos os dados de var 1 e var 2 junto)
+(media_est <- apply(amostra2, 1, mean))
+
+## viés (tem q ser quse 0 aqui)
+(vies <- apply(amostra2, 1, mean)- sigma^2)
+
+## variância/erro padrão
+(variancia = apply(amostra2, 1, var))
+(ep <- apply(amostra2, 1, sd))
+
+## erro quadrático médio
+(eqm <- apply(amostra2, 1, function(x) mean((x - sigma^2)^2)))
+
+## eficiência relativa 
+var(amostra2[1,]) / var(amostra2[2,])
+# variancia 2 é mais eficiente
+
+##consistência
+
+```
+
+## 2.3 Distribuição amostral da variância: população não normal.
+
+```{r}
+# Repita o exercício anterior para observações provenientes de Y∼Gama(2,4)
+## Cenário vdd
+shape <- 2
+rate <- 4
+n <- 10
+N <- 10000
+
+## Gerar amostras
+amostra3 <- replicate(N,{
+  y <- rgamma(n, shape, rate)
+  var1 <-sum((y - mean(y))^2)/n
+  var2 <- (sum((abs(y - mean(y)))/n))^2
+  c(var1 = var1,var2 =var2)})
+
+## Resultados teóricos
+### Esperança
+(esp <- shape/rate)
+
+### Variância
+(var <- shape/(rate^2))
+
+###
+
+## não viciado E(S^2)= sigma^2 (é necessário usar apply pq se for usar mean direto, ele vai fazzer p todos os dados de var 1 e var 2 junto)
+(media_est <- apply(amostra3, 1, mean))
+
+## viés (tem q ser quse 0 aqui)
+(vies <- apply(amostra3, 1, mean)- var)
+
+## variância/erro padrão
+(variancia = apply(amostra3, 1, var))
+(ep <- apply(amostra3, 1, sd))
+
+## erro quadrático médio
+(eqm <- apply(amostra3, 1, function(x) mean((x - var)^2)))
+
+## eficiência relativa 
+var(amostra3[1,]) / var(amostra3[2,])
+```
+
+-------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+Lista 7
+
+
+# **1 Simulações**
+
+## **1.1 Testando o gerador de números aleatórios simulando lançamentos de um dado**
+
+### TESTE DE ADERENCIA - DADOS NORMAIS, TESTA SE SEGUE NORMAL MESMO... OU PRA QUALQUER DISTRIBUICAO
+#### DADOS CATEGORICOS OU DISCRETOS QUE SAO TRATADOS COMO CATEGORIA -> QUI QUADRADO
+#### TAMANHO DO TESTE: NIVEL DE SIGNIFICANCIA -> SE FOR 0.05, EM N GRANDE LANÇAMENTOS REJEITAMOS 5% DELES
+#### POR QUE AQUI O ERRO TIPO II EH DIFICIL DE CALCULAR EM RELACAO AO EXEMPLO 1.2?
+erro do tipo ii: nao rejeitar dado que eh falsa
+
+O objetivo aqui é fazer um teste simples do gerador de números aleatórios. Vamos simular lançamentos de um dado e verificar se todas as faces ocorrem com aproximadamente a mesma frequência. Após simular n lançamentos temos ni de cada face com i∈(1,2,3,4,5,6). Calcule estatística de teste:
+
+T=∑i=16(ni−n/6)2n/6
+
+\
+que tem distribuição χ2 com 5 graus de liberdade.\
+
+a. Obtenha o valor crítico ao nível de 5% de significância.\
+```{r}
+set.seed(123)
+qchisq(0.95, df=5)
+```
+
+b. Verifique se pode-se rejeitar a hipótese de mesma frequencia de ocorrência das faces.\
+t calculado: T=∑i=16(ni−n/6)2n/6
+```{r}
+n <- 1000
+dado <- sample(1:6, n, replace = TRUE)
+ni <- table(dado)
+ni
+
+t <- sum(((ni-n/6)^2)/(n/6))
+t
+(t_funcao_pronta <- chisq.test(ni))
+```
+Nao rejeita H0 porque t < t calculado.
+
+c.Repita o exercício diversas vezes e com diferentes números de lançamentos.
+```{r}
+num_lanc <- c(10, 100, 1000, 10000)
+for (n in num_lanc) {                     # pra cada valor do numero de lancamentos
+  dados <- sample(1:6, n, replace = TRUE) # amostra aleatória da quantidade de aparecimento de cada face
+  ni <- table(dados)                      # tabela de frequencias (quantas vezes cada face aparece)
+  print(chisq.test(ni))                   # valor critico 
+}
+```
+# TREINANDO EXERCICIO 1.1 DE NOVO 
+a)
+```{r}
+set.seed(123)
+(v_crit <- qchisq(0.95, 5))
+```
+
+b)
+H0: n1=n2=n3=...=n6 -> calcular estatistica de teste
+```{r}
+n <- 1000
+dado <- sample(1:6, n, replace=TRUE)
+(ni <- table(dado))
+
+t <- sum(((ni-n/6)^2)/(n/6))
+t
+
+(t_funcao_pronta <- chisq.test(ni))
+```
+c)
+```{r}
+N <- c(100, 1000, 10000)
+for (n in N){
+  dado <- sample(1:6, n, replace = TRUE)
+  ni <- table(dado)
+  print(chisq.test(ni))
+} 
+```
+
+# 1.2 -> BOM PRA PROVA!!!!
+amostra <- rnorm(n, 0, 1)
+H0: media = 0
+H1: media =! 0
+significancia: alpha 
+
+a)
+```{r}
+N <- 10000
+n <- 15
+
+p_valores <- numeric(N)
+
+alpha <- 0.05
+
+for (i in 1:N){
+  amostra <- rnorm(n, 0, 1)
+  z <- mean(amostra) / (1/sqrt(n)) 
+  p_valores[i] <- 2 * (1-pnorm(abs(z)))
+}
+
+comp <- p_valores < alpha
+(proporcao <- mean(comp))
+```
+
+b) 
+```{r}
+N <- 10000
+n <- 15
+alpha <- 0.05
+
+p_valores <- numeric(N)
+
+for (i in 1:N){
+  amostras <- rnorm(n, 0.7, 1)
+  z <- mean(amostras) / (1/sqrt(n))
+  p_valores[i] <- 2 * (1 - pnorm(abs(z)))
+}
+
+(poder <- mean(p_valores < alpha))
+```
+ 
+c)
+```{r}
+n <- 15
+alpha <- 0.05
+media <- 0.7
+var <- 1
+
+z_critico <- qnorm(1-alpha/2)
+ncp <- (media * sqrt(n))/var
+(poder_analitico <- pnorm(-z_critico, mean = ncp) + (1-pnorm(z_critico, ncp)))
+
+```
+ 
+d)
+```{r}
+N <- 10000
+n <- 15
+media <- c(0.4, 0.6, 0.8, 1.0, 1.2)
+alpha <- 0.05
+
+p_valores <- numeric(N)
+proporcao <- numeric(length(media))
+
+for(j in 1:length(media)){
+  for(i in 1:N){
+  amostra <- rnorm(n, media[j], 1)
+  z <- mean(amostra)/(1/sqrt(n))
+  p_valores[i] <- 2 * (1 - pnorm(abs(z)))
+  }
+  proporcao[j] <- mean(p_valores < alpha)
+}
+
+plot(media, proporcao, type = "l")
+```
+ faz sentido o grafico porque, quanto mais a media de afasta de 0, mais facil detectar a diferenca, aumentando o poder.
+
+e)
+efeito(delta) = 0.04
+
+```{r}
+n <- seq(10, 1000, by=10)
+N <- 10000
+alpha <- 0.05
+
+p_valores <- numeric(N)
+poder <- numeric(length(n))
+
+for(j in 1:length(n)){
+  for(i in 1:N){
+  amostra <- rnorm(n[j], 0.04, 1)
+  z <- mean(amostra)/(1/sqrt(n[j]))
+  p_valores[i] <- 2 * (1 - pnorm(abs(z)))
+}
+  poder[j] <- mean(p_valores < alpha)
+}
+
+plot(n, poder, type = "l")
+```
+
+f) letras a), c) e d) para variancia POPULACIONAL desconhecida - teste t
+a)
+```{r}
+N <- 10000
+n <- 15
+alpha <- 0.05
+
+p_valores <- numeric(N)
+  
+for (i in 1:N){
+  amostra <- rnorm(n, 0, 1)
+  resultado <- t.test(amostra, mu=0)
+  p_valores[i] <- resultado$p.value
+}
+
+poder <- mean(p_valores < alpha)
+poder
+```
+c) 
+```{r}
+power.t.test(15, 0.7, 1, 0.05)
+```
+d)
+```{r}
+rm(list=ls())
+set.seed(123)
+media <- c(0.2, 0.3, 0.4, 0.5, 0.6)
+N <- 10000
+n <- 15
+alpha <- 0.05
+
+p_valores <- numeric(N)
+proporcao <- numeric(length(media))
+
+for (j in 1:length(media)){
+for (i in 1:N){
+  amostra <- rnorm(n, media[j], 1)
+  resultado <- t.test(amostra, mu=0)
+  p_valores[i] <- resultado$p.value
+}
+  proporcao[j] <- mean(p_valores<alpha)
+}
+
+plot(media, proporcao, type = "l")
+```
+
+e) distribuicao t:
+a)
+```{r}
+N <- 10000
+n <- 15
+alpha <- 0.05
+
+p_valores <- numeric(N)
+  
+for (i in 1:N){
+  amostra <- rt(n, n-1) 
+  resultado <- t.test(amostra, mu=0)
+  p_valores[i] <- resultado$p.value
+}
+
+poder <- mean(p_valores < alpha)
+poder
+```
+
+c) 
+```{r}
+power.t.test(15, 0.7, 1, 0.05)
+```
+
+d)
+```{r}
+rm(list=ls())
+set.seed(123)
+media <- c(0.2, 0.3, 0.4, 0.5, 0.6)
+N <- 10000
+n <- 15
+alpha <- 0.05
+
+p_valores <- numeric(N)
+proporcao <- numeric(length(media))
+
+for (j in 1:length(media)){
+for (i in 1:N){
+  amostra <- rt(n, n-1) + media[j]
+  resultado <- t.test(amostra, mu=0)
+  p_valores[i] <- resultado$p.value
+}
+  proporcao[j] <- mean(p_valores<alpha)
+}
+
+plot(media, proporcao, type = "l")
+```
+
+
+
+
+
+
+
+-------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+
+
+Lista 8
+
+1.1)
+
+distribuicao amostral da media: conjunto de N medias de N amostras.
+
+a)
+```{r}
+set.seed(123)
+n <- 15
+N <- 10000
+medias <- numeric(N)
+
+for (i in 1:N){
+  amostra <- rgamma(n, 2, 0.25)
+  medias[i] <- mean(amostra)
+}
+
+(quantis <- quantile(medias, c(0.025, 0.975)))
+hist(medias)
+```
+
+Agora a distribuicao eh desconhecida: estatistica t
+```{r}
+dados <- c(20.6, 6.7, 10.3, 4.2, 9.3, 6.3, 26.8, 9.6, 4.3, 3.1, 20,	17.1, 16.4, 13.3, 17)
+```
+
+b)
+bootstrap
+```{r}
+N <- 10000
+medias <- numeric(N)
+
+for(i in 1:N){
+ream <- sample(dados, length(dados), replace=TRUE)
+medias[i] <- mean(ream)
+}
+```
+
+c) gamma - estimar parametros 
+```{r}
+# estimando os parametros
+
+N <- 10000
+
+media <- mean(dados)
+var <- var(dados)
+
+shape_est <- media^2/var
+rate_est <- media/var
+
+# simulando
+for(i in 1:N){
+  amostra <- rgamma(n, shape_est, rate_est)
+  medias[i] <- mean(amostra)
+}
+
+hist(medias)
+```
+
+
+1.2
+mesmo da 1.1 pro coeficiente de variacao
+a)
+```{r}
+n <- 15
+N <- 10000
+coef <- numeric(N)
+
+for (i in 1:N){
+  amostra <- rgamma(n, 2, 0.25)
+  media <- mean(amostra)
+  desvio <- sd(amostra)
+  coef[i] <- (desvio/media) * 100
+}
+
+quantile(coef, c(0.025, 0.975))
+```
+
+b)
+```{r}
+cv <- numeric(N)
+for(i in 1:N){
+  ream <- sample(dados, length(dados), replace = TRUE)
+  cv[i] <- (sd(ream)/mean(ream)) * 100
+}
+```
+
+c)
+```{r}
+media <- mean(dados)
+desvio <- sd(dados)
+
+shape_est <- media^2/desvio^2
+rate_est <- media/desvio^2
+
+cv <- numeric(N)
+
+for(i in 1:N){
+  amostra <- rgamma(n, shape_est, rate_est)
+  cv[i] <- (sd(amostra)/mean(amostra)) * 100
+}
+```
+
+1.3)
+comparando duas amostras
+
+```{r}
+y1 <- c(5.5, 8.2, 26.0, 23.9, 12.4, 12.0, 7.7, 2.0, 4.9, 13.1, 15.0, 17.6)
+y2 <- c(3.3, 3.0, 2.8, 7.0, 4.0, 5.7, 3.9, 5.5, 1.7, 6.5, 2.8, 7.2)
+
+alpha <- 0.05
+
+# i)
+t.test(y1,y2)
+
+# ii)
+wilcox.test(y1,y2)
+```
+
+```{r}
+# iii)
+# passo 1
+media1 <- mean(y1)
+media2 <- mean(y2)
+dif_geral <- media1 - media2
+dif_geral
+
+# passo 2
+y3 <- c(y1, y2)
+y3_novo <- sample(y3, length(y3), replace = FALSE) # ou só sample(y3)
+
+y1_novo <- y3_novo[1:length(y1)]
+y2_novo <- y3_novo[(length(y1)+1):length(y3)]
+
+dif_sim <- mean(y1_novo) - mean(y2_novo)
+dif_sim
+```
+
+```{r}
+# passo 3
+N <- 9999
+dif_sim <- numeric(N)
+
+for (i in 1:N){
+  y3_novo <- sample(y3)
+  y1_novo <- y3_novo[1:length(y1)]
+  y2_novo <- y3_novo[(length(y1)+1):length(y3)]
+  
+  dif_sim[i] <- mean(y1_novo) - mean(y2_novo)
+}
+
+# passo 4 - proporcao=pvalor de teste bilateral
+vetor_dif <- abs(dif_sim) >= abs(dif_geral)
+p_valor <- mean(vetor_dif)
+p_valor
+```
+
+1.4)
+Amostras de distribuições normais com variâncias iguais.
+```{r}
+set.seed(123)
+am1 <- rnorm(12, 0, 1)
+am2 <- rnorm(12, 0.4, 1)
+alpha <- 0.05
+
+t.test(am1, am2)
+wilcox.test(am1, am2)
+
+media_am1 <- mean(am1)
+media_am2 <- mean(am2)
+dif_obs <- media_am1 - media_am2
+
+am3 <- c(am1, am2)
+
+N <- 9999
+diff <- numeric(M)
+
+for(i in 1:N){
+  am3 <- c(am1, am2)
+  novaam3 <- sample(am3)
+  novaam1 <- novaam3[1:length(am1)]
+  novaam2 <- novaam3[(length(am1)+1):length(am3)]
+  diff[i] <- mean(novaam1) - mean(novaam2)
+}
+
+valor_prop <- abs(diff) >= abs(dif_obs)
+mean(valor_prop)
+
+# erro tipo I: rejeita h0 quando eh verdadeira
+# medias precisam ser iguais!
+M <- 1000
+p_valores <- numeric(N)
+
+for (j in 1:M){
+am1 <- rnorm(12, 0, 1)
+am2 <- rnorm(12, 0, 1)
+dif_obs <- mean(am1) - mean(am2)
+am3 <- c(am1, am2)
+diff <- numeric (N)
+for(i in 1:N){
+  novaam3 <- sample(am3)
+  novaam1 <- novaam3[1:length(am1)]
+  novaam2 <- novaam3[(length(am1)+1):length(am3)]
+  diff[i] <- mean(novaam1) - mean(novaam2)
+}
+p_valores[j] <- mean(abs(diff) >= abs(dif_obs))
+}
+
+erro <- mean(p_valores < alpha)
+
+
+# erro tipo ii, nao rejeita qnd eh verdadeira
+am1 <- rnorm(12, 0, 1)
+am2 <- rnorm(12, 0.4, 1)
+dif_obs <- mean(am1) - mean(am2)
+
+for(i in 1:N){
+  am3 <- c(am1, am2)
+  novaam3 <- sample(am3)
+  novaam1 <- novaam3[1:length(am1)]
+  novaam2 <- novaam3[(length(am1)+1):length(am3)]
+  diff[i] <- mean(novaam1) - mean(novaam2)
+}
+
+mean(abs(diff) >= abs(dif_obs))
+nao_rej <- 1-mean(abs(diff) >= abs(dif_obs))
+```
+
+
+------------------------------------------------------------------------
+
+Artigo
+
+
+O IC clássico ignora a curtose e por isso quebra fora da normalidade. O Bonett estima a curtose e a incorpora no erro padrão — 
+pagando um pequeno custo em amostras normais para ganhar robustez geral.
+
+O intervalo de confiança exato para o desvio padrão σ (baseado na distribuição qui-quadrado) assume normalidade dos dados. 
+Na prática, ele é extremamente sensível a violações dessa suposição — mesmo pequenas — e sua cobertura não melhora com o aumento da amostra. 
+Por exemplo, em distribuições simétricas como a Logística ou t(5), a cobertura cai para 76% e 51%, respectivamente, mesmo com nível nominal de 95%.
+
+A taxa de cobertura (coverage probability) é a probabilidade de que o intervalo de confiança construído realmente contenha o verdadeiro valor do parâmetro σ.
+
+O autor propõe um intervalo alternativo baseado na transformação logarítmica de σ̂², 
+aproveitando suas propriedades de estabilização de variância e convergência mais rápida à normalidade,
+onde se incorpora uma estimativa robusta da curtose (κ₄), com ajuste para amostras pequenas. 
+A curtose pode ser estimada dos dados ou combinada com informação prévia de estudos anteriores.
+
+
