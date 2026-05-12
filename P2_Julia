@@ -1,3 +1,47 @@
+erro tipo I medias iguais
+n <- 15
+N <- 10000
+alpha <- 0.05
+
+prop <- numeric(N)
+
+for (i in 1:N){
+ y1 <- rnorm(n, 0, 1)
+ y2 <- rnorm(n, 0, 1)
+ teste <- t.test(y1, y2)
+ pvalor <- teste$p.value
+ prop[i] <- pvalor<alpha
+}
+
+erro_tipo1 <- mean(prop)
+
+
+
+erro tipo II medias diferentes
+n <- 15
+N <- 10000
+alpha <- 0.05
+
+prop <- numeric(N)
+
+for (i in 1:N){
+ y1 <- rnorm(n, 0, 1)
+ y2 <- rnorm(n, 0.5, 1)
+ teste <- t.test(y1, y2)
+ pvalor <- teste$p.value
+ prop[i] <- pvalor<alpha
+}
+
+erro_tipo1 <- mean(prop)
+
+
+poder do teste
+questao 4
+prova 1
+
+
+
+
 Lista 4:
 # Estimando π com uma moeda
 Considere o experimento aleatório que consiste em lançar uma moeda até que a proporção de “caras” seja maior que 0,5, ou seja, que o número acumulado de caras seja maior que o número de coroas. Registra-se a fração de “caras” obtidas. Por exemplo se a sequência (coroa, cara, coroa, cara, cara) é obtida, o resultado registrado é 3/5. Se o experimento é repetido, a média dos resultados se aproxima de π/4
