@@ -63,7 +63,7 @@ $$
 $$
 
 
-# Testando os poderes para DIC e BIC
+# Teoria
 
 ### Dados base
 Foi utilizado dados sobre o tempo de derretimento e diferentes tipos de chocolates para a simulação
@@ -112,11 +112,47 @@ y <- mu + tau[trat] + beta[bloco] + erro
 y
 
 ## Análise de variância nos dois modelos
-bic = anova(aov(y ~ factor(trat) + factor(bloco)))
+bic = summary(aov(y ~ factor(trat) + factor(bloco)))
 dic = anova(aov(y ~ factor(trat)))
-
+bic
 ## Poder, rejeitar H0 dado que H0 é falso
-bic$`Pr(>F)` < 0.05
-dic$`Pr(>F)` < 0.05
+bic$`Pr(>F)`[1] < 0.05
+dic$`Pr(>F)`[1] < 0.05
 
 ```
+
+# Simulação
+```{r}
+sim_bic_100 <- replicate(100,{
+  erro = rnorm(n_obs,0,sqrt(sigma2))
+  tau = c(15.56, 21.56,-22.19,-14.94)
+  beta = c(8.5, 3.5, -4.0, -8.0)
+  
+  trat <- rep(1:tratamentos, each = blocos)
+  bloco <- rep(1:blocos, times = tratamentos)
+  
+  y <- mu + tau[trat] + beta[bloco] + erro
+  bic = (aov(y ~ factor(trat) + factor(bloco)))
+  p_valor <- summary(bic)[[1]]["factor(trat)", "Pr(>F)"]
+  p_valor < 0.05
+})
+
+mean(sim_bic_100)
+
+sim_dic_100 <- replicate(100,{
+  erro = rnorm(n_obs,0,sqrt(sigma2))
+  tau = c(15.56, 21.56,-22.19,-14.94)
+  beta = c(8.5, 3.5, -4.0, -8.0)
+  
+  trat <- rep(1:tratamentos, each = blocos)
+  bloco <- rep(1:blocos, times = tratamentos)
+  
+  y <- mu + tau[trat] + beta[bloco] + erro
+  dic = anova(aov(y ~ factor(trat)))
+  rej <- dic$`Pr(>F)`[1] < 0.05
+  
+})
+
+mean(sim_dic_100)
+```
+
