@@ -1,0 +1,122 @@
+---
+title: "DIC x BIC  - Computacional"
+author: "Cristiane Zhu e Júlia Zorzo"
+format: html
+editor: visual
+---
+
+# Contextualização:
+
+Entre os delineamentos mais utilizados no planejamento de experimentos estão o delineamento inteiramente casualizado (DIC) e o delineamento em blocos completos casualizados (DBC). Ambos têm como objetivo avaliar possíveis diferenças entre tratamentos, o que é chamado de efeito do tratamento, geralmente por meio da análise de variância (ANOVA). <br>
+
+No DIC, tem-se que as unidades experimentais — onde são aplicados os tratamentos — são homogêneas, pois a variabilidade observada é atribuída de forma única aos tratamentos e ao erro aleatório. Já o DBC incorpora uma estrutura adicional ao modelo ao considerar a existência de blocos, grupos de unidades experimentais homogêneas entre si, mas heterogêneas entre os grupos. Dessa forma, nesse delineamento, almeja-se controlar fatores externos de influência, reduzindo a variabilidade residual e, consequentemente, aumentando a precisão das estimativas dos efeitos dos tratamentos. <br>
+
+Na prática, o impacto dos efeitos dos tratamentos, a variabilidade experimental e a relevância da estrutura de blocos aplicada raramente são conhecidos previamente. Esses fatores influenciam diretamente o desempenho dos testes estatísticos, especialmente no que se refere ao poder do teste, definido como a probabilidade de rejeitar a hipótese nula quando ela é falsa. <br>
+
+Pensando nisso, a simulação computacional surge como uma ferramenta essencial para a avaliação do poder dos testes em diferentes cenários. Por meio da geração de múltiplos dados, é possível investigar como diferentes níveis de variabilidade e estruturas experimentais impactam o desempenho dos delineamentos. <br>
+
+Assim, o objetivo das simulações é comparar o poder do teste de hipóteses associado aos delineamentos inteiramente casualizado e em blocos completos casualizados, considerando diferentes números de réplicas. Dessa maneira, a escolha adequada do delineamento se torna mais precisa e confiável, gerando resultados mais satisfatórios ao conduzir um experimento.
+
+# Modelos DIC e DBC
+
+### Modelo DIC
+
+$$
+Y_{ij} = \mu + \tau_i + \varepsilon_{ij}, \quad i = 1, \dots, k;\; j = 1, \dots, r
+$$
+
+Onde:
+
+-   $Y_{ij}$: observação do $i$-ésimo tratamento na $j$-ésima repetição\
+-   $\mu$: média geral\
+-   $\tau_i$: efeito do $i$-ésimo tratamento\
+-   $\varepsilon_{ij} \sim N(0, \sigma^2)$: erro aleatório
+
+### Modelo DBC
+
+$$
+Y_{ij} = \mu + \tau_i + \beta_j + \varepsilon_{ij}, \quad i = 1, \dots, k;\; j = 1, \dots, b
+$$
+
+Onde:
+
+-   $Y_{ij}$: observação do $i$-ésimo tratamento no $j$-ésimo bloco\
+-   $\mu$: média geral\
+-   $\tau_i$: efeito do $i$-ésimo tratamento\
+-   $\beta_j$: efeito do $j$-ésimo bloco\
+-   $\varepsilon_{ij} \sim N(0, \sigma^2)$: erro aleatório
+
+### Suposições a serem satisfeitas
+
+$\varepsilon_{ij}$  independentes
+
+
+$$
+\varepsilon_{ij} \sim N(0,\sigma^2)
+$$
+$$
+\sum_{i=1}^{t}\tau_i = 0
+$$
+
+$$
+\sum_{i=1}^{j}\beta_j = 0
+$$
+
+
+# Testando os poderes para DIC e BIC
+
+### Dados base
+Foi utilizado dados sobre o tempo de derretimento e diferentes tipos de chocolates para a simulação
+```{r}
+#| echo: false
+tempo <- c(119,144,156,157,
+           157,154,145,144,
+           112,94,113,106,
+           122,119,108,105)
+
+dados <- matrix(tempo,
+                    nrow = 4,
+                    byrow = TRUE)
+
+rownames(dados) <- c("Branco","Ao_leite","Meio_amargo","Amargo")
+colnames(dados) <- c("Obs1","Obs2","Obs3","Obs4")
+
+(tabela_dados <- as.data.frame(dados))
+
+mean(tempo)
+```
+
+### 1º Fixar valores
+```{r}
+tratamentos <- 4
+blocos <- 4
+n_obs <- tratamentos * blocos
+mu <- 128
+sigma2 = 124.81 # variância do erro experimental
+
+## Suposições satisfeitas
+erro = rnorm(n_obs,0,sqrt(sigma2))
+tau = c(15.56, 21.56,-22.19,-14.94) # efeitos de tratamento (somatório igual a 0)
+beta = c(8.5, 3.5, -4.0, -8.0) # efeitos de bloco (somatório igual a 0)
+```
+
+
+### Definir modelos
+```{r}
+## Definindo cada observação ij
+trat <- rep(1:tratamentos, each = blocos)
+bloco <- rep(1:blocos, times = tratamentos)
+
+## Modelo verdadeiro
+y <- mu + tau[trat] + beta[bloco] + erro
+y
+
+## Análise de variância nos dois modelos
+bic = anova(aov(y ~ factor(trat) + factor(bloco)))
+dic = anova(aov(y ~ factor(trat)))
+
+## Poder, rejeitar H0 dado que H0 é falso
+bic$`Pr(>F)` < 0.05
+dic$`Pr(>F)` < 0.05
+
+```

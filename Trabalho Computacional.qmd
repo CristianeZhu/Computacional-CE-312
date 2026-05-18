@@ -33,10 +33,10 @@ $$
 
 Onde:
 
-- $Y_{ij}$: observação do $i$-ésimo tratamento na $j$-ésima repetição  
-- $\mu$: média geral  
-- $\tau_i$: efeito do $i$-ésimo tratamento  
-- $\varepsilon_{ij} \sim N(0, \sigma^2)$: erro aleatório  
+-   $Y_{ij}$: observação do $i$-ésimo tratamento na $j$-ésima repetição\
+-   $\mu$: média geral\
+-   $\tau_i$: efeito do $i$-ésimo tratamento\
+-   $\varepsilon_{ij} \sim N(0, \sigma^2)$: erro aleatório
 
 ### Modelo DBC
 
@@ -46,13 +46,13 @@ $$
 
 Onde:
 
-- $Y_{ij}$: observação do $i$-ésimo tratamento no $j$-ésimo bloco  
-- $\mu$: média geral  
-- $\tau_i$: efeito do $i$-ésimo tratamento  
-- $\beta_j$: efeito do $j$-ésimo bloco  
-- $\varepsilon_{ij} \sim N(0, \sigma^2)$: erro aleatório  
+-   $Y_{ij}$: observação do $i$-ésimo tratamento no $j$-ésimo bloco\
+-   $\mu$: média geral\
+-   $\tau_i$: efeito do $i$-ésimo tratamento\
+-   $\beta_j$: efeito do $j$-ésimo bloco\
+-   $\varepsilon_{ij} \sim N(0, \sigma^2)$: erro aleatório
 
-#  1º teste: diferentes variâncias de resíduo
+# 
 ### Parâmetros para o primeiro teste
 
 ```{r}
@@ -125,6 +125,7 @@ simular_poder <- function(efeito, sigma, sigma_bloco) {
 ```
 
 ### Gráficos
+
 ```{r}
 
 ```
@@ -163,7 +164,8 @@ print(resultados)
 ```
 
 
-# 2º teste: diferentes números de repetições/ blocos 
+
+# 2º teste: diferentes números de repetições/ blocos
 
 # Conclusões
 
@@ -182,7 +184,6 @@ DBC não melhorou o poder de forma consistente, entao os blocos nao foram fator 
 proximo passo: aumentar variancia do bloco - deve melhorar o poder do dbc em
 
 relacao ao dic...
-
 
 # Cris: Rascunhos
 
