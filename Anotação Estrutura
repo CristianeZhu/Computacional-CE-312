@@ -4,11 +4,22 @@
 - Simulações: foco principal!!
     1) efeito tratamento grande x pequeno (k = 100, 1000, 10000)  -> como foram usados os dados dos chocolates, os efeitos de tratamento são grandes, entao o poder fica alto; o que define 
 o efeito ser grande ou nao, alguma escala? por esse exemplo real dos chocolates, usar o dic ou o bic da na mesma, entao quer dizer que efeito de tratamento grande "anula" o bloco?
-    2) blocos fracos x fortes (aumentar e diminuir beta)
-    3) erro baixo x alto
+    2) blocos fracos x fortes (aumentar e diminuir beta) -> resultados satisfatórios apesar de poder baixo: 60% -> erro baixo fixado (16)
+    3) erro baixo x alto 
     4) tamanho amostral (diferentes números de blocos)
+  > como fazer as simulacoes? todas as combinacoes? bloco fraco com erro baixo e pequeno tam amostral, bloco fraco com erro baixo e grande tam amostral, bloco fraco com erro alto e pequeno tam amostral, etc?
 - Tabela mostrando as comparações
 
 
  > adicionar gráficos? manter o de calor(demora pra rodar) ou ele acaba "contradizendo" as comparações que fixam parametros acima?
  > usar set.seed para ter sempre os mesmos dados na simulação?
+
+```{r}
+tratamentos <- 4
+blocos      <- 4
+n_obs       <- tratamentos * blocos
+mu          <- 128
+
+trat  <- rep(1:tratamentos, each = blocos) ----> o que é fixo poderíamos declarar só uma vez?
+bloco <- rep(1:blocos, times = tratamentos)
+```
