@@ -125,6 +125,7 @@ dic$`Pr(>F)`[1] < 0.05
 
 # Efeito de tratamento pequeno vs grande
 Teste de hipótese:
+
 H0: médias dos tratamentos são iguais
 H1: pelo menos uma das médias dos tratamentos é diferente
 
@@ -138,6 +139,10 @@ sigma2 <- 16
 
 #### Efeito de tratamento grande
 ```{r}
+## Efeito trat grande
+tau = c(15.56, 21.56,-22.19,-14.94)
+
+
 sim <- replicate(1000, {
   erro  <- rnorm(n_obs, 0, sqrt(sigma2))
   y     <- mu + tau[trat] + beta[bloco] + erro
