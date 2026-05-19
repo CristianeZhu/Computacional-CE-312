@@ -131,14 +131,43 @@ H1: pelo menos uma das médias dos tratamentos é diferente
 
 ```{r}
 ## pequeno(fazer)
+tratamentos <- 4
+blocos <- 4
+n_obs <- tratamentos * blocos
+mu <- 128
 tau  <- c(0, 1, 2, 3)
 beta <- c(5, -5, 5, -5)
 sigma2 <- 16
+
+sim <- replicate(1000, {
+  erro  <- rnorm(n_obs, 0, sqrt(sigma2))
+  y     <- mu + tau[trat] + beta[bloco] + erro
+  
+  p_bic <- summary(aov(y ~ factor(trat) + factor(bloco)))[[1]]["factor(trat)", "Pr(>F)"]  ## extrai o conteúdo da tabela 1, linha fator(trat) e coluna p- valor
+  p_dic <- summary(aov(y ~ factor(trat)))[[1]]["factor(trat)", "Pr(>F)"]
+  
+  c(bic = p_bic < 0.05, dic = p_dic < 0.05)
+})
+
+poder_bic <- mean(sim["bic", ]) ## Linha bic e todas as colunas(simulações)
+poder_dic <- mean(sim["dic", ]) ## Linha dic e todas as colunas(simulações)
+
+poder_bic # 0.101
+poder_dic # 0.001
 ```
 
 
 #### Efeito de tratamento grande
 ```{r}
+tratamentos <- 4
+blocos <- 4
+n_obs <- tratamentos * blocos
+mu <- 128
+sigma2 = 124.81 # variância do erro experimental
+
+## Suposições satisfeitas
+erro = rnorm(n_obs,0,sqrt(sigma2))
+beta = c(8.5, 3.5, -4.0, -8.0) # efeitos de bloco (somatório igual a 0)
 ## Efeito trat grande
 tau = c(15.56, 21.56,-22.19,-14.94)
 
