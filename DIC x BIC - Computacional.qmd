@@ -1,3 +1,4 @@
+
 ---
 title: "DIC x BIC  - Computacional"
 author: "Cristiane Zhu e Júlia Zorzo"
@@ -7,15 +8,13 @@ editor: visual
 
 # Contextualização:
 
-Entre os delineamentos mais utilizados no planejamento de experimentos estão o delineamento inteiramente casualizado (DIC) e o delineamento em blocos completos casualizados (DBC). Ambos têm como objetivo avaliar possíveis diferenças entre tratamentos, o que é chamado de efeito do tratamento, geralmente por meio da análise de variância (ANOVA). <br>
+Entre os delineamentos mais utilizados no planejamento de experimentos estão o delineamento inteiramente casualizado (DIC) e o delineamento em blocos completos casualizados (BIC). Ambos avaliam efeitos de tratamento - o que se aplica nas unidades experimentais - por meio da análise de variância (ANOVA). É natural o surgimento de dúvidas em relação à escolha do melhor delineamento, o que faz do entendimento do desempenho de cada um essencial na condução de um experimento.
 
-No DIC, tem-se que as unidades experimentais — onde são aplicados os tratamentos — são homogêneas, pois a variabilidade observada é atribuída de forma única aos tratamentos e ao erro aleatório. Já o DBC incorpora uma estrutura adicional ao modelo ao considerar a existência de blocos, grupos de unidades experimentais homogêneas entre si, mas heterogêneas entre os grupos. Dessa forma, nesse delineamento, almeja-se controlar fatores externos de influência, reduzindo a variabilidade residual e, consequentemente, aumentando a precisão das estimativas dos efeitos dos tratamentos. <br>
+No delineamento inteiramente casualizado, toda variação não explicada pelos tratamentos é absorvida pelo erro. Já o BIC introduz uma estrutura de blocos que, quando relevante, retira do erro uma parcela da variabilidade — reduzindo o quadrado médio do erro e aumentando a estatística F do teste. Por essa razão, o BIC pode ter maior poder que o DIC. Porém, quando o efeito de bloco é fraco ou inexistente, o BIC perde graus de liberdade sem ganho correspondente, penalizando o teste. Portanto, nem sempre o BIC tem melhor eficácia que o DIC a depender da situação. 
 
-Na prática, o impacto dos efeitos dos tratamentos, a variabilidade experimental e a relevância da estrutura de blocos aplicada raramente são conhecidos previamente. Esses fatores influenciam diretamente o desempenho dos testes estatísticos, especialmente no que se refere ao poder do teste, definido como a probabilidade de rejeitar a hipótese nula quando ela é falsa. <br>
+O poder do teste — probabilidade de rejeitar H₀ quando ela é falsa — depende simultaneamente da magnitude dos efeitos de tratamento, da variabilidade do erro e da relevância da estrutura de blocos. Como esses fatores raramente são conhecidos antes do experimento, a simulação computacional permite investigar como o poder se comporta em diferentes combinações desses parâmetros - falar mais da relevancia da simulacao (ponto chave).
 
-Pensando nisso, a simulação computacional surge como uma ferramenta essencial para a avaliação do poder dos testes em diferentes cenários. Por meio da geração de múltiplos dados, é possível investigar como diferentes níveis de variabilidade e estruturas experimentais impactam o desempenho dos delineamentos. <br>
-
-Assim, o objetivo das simulações é comparar o poder do teste de hipóteses associado aos delineamentos inteiramente casualizado e em blocos completos casualizados, considerando diferentes números de réplicas. Dessa maneira, a escolha adequada do delineamento se torna mais precisa e confiável, gerando resultados mais satisfatórios ao conduzir um experimento.
+Assim, o objetivo deste trabalho é comparar o poder empírico do DIC e do DBC por meio de simulações de Monte Carlo, variando a variância do erro experimental e a magnitude do efeito de bloco. A análise é ancorada em dados reais de tempo de derretimento de chocolates, cujos parâmetros estruturais — média geral, efeitos de tratamento e de bloco — são utilizados como referência. Os resultados são sumarizados por meio de um mapa de calor que delimita as regiões em que cada delineamento é preferível.
 
 # Modelos DIC e DBC
 
@@ -48,12 +47,12 @@ Onde:
 
 ### Suposições a serem satisfeitas
 
-$\varepsilon_{ij}$  independentes
-
+$\varepsilon_{ij}$ independentes
 
 $$
 \varepsilon_{ij} \sim N(0,\sigma^2)
-$$
+$$ 
+
 $$
 \sum_{i=1}^{t}\tau_i = 0
 $$
@@ -62,11 +61,12 @@ $$
 \sum_{i=1}^{j}\beta_j = 0
 $$
 
-
 # Teoria
 
 ### Dados base
+
 Foi utilizado dados sobre o tempo de derretimento e diferentes tipos de chocolates para a simulação
+
 ```{r}
 #| echo: false
 tempo <- c(119,144,156,157,
@@ -87,6 +87,7 @@ mean(tempo)
 ```
 
 ### 1º Fixar valores
+
 ```{r}
 tratamentos <- 4
 blocos <- 4
@@ -100,8 +101,8 @@ tau = c(15.56, 21.56,-22.19,-14.94) # efeitos de tratamento (somatório igual a 
 beta = c(8.5, 3.5, -4.0, -8.0) # efeitos de bloco (somatório igual a 0)
 ```
 
-
 ### Definir modelos
+
 ```{r}
 ## Definindo cada observação ij
 trat <- rep(1:tratamentos, each = blocos)
@@ -115,6 +116,7 @@ y
 bic = summary(aov(y ~ factor(trat) + factor(bloco)))
 dic = anova(aov(y ~ factor(trat)))
 bic
+dic
 ## Poder, rejeitar H0 dado que H0 é falso
 bic$`Pr(>F)`[1] < 0.05
 dic$`Pr(>F)`[1] < 0.05
@@ -122,37 +124,75 @@ dic$`Pr(>F)`[1] < 0.05
 ```
 
 # Simulação
+
 ```{r}
-sim_bic_100 <- replicate(100,{
-  erro = rnorm(n_obs,0,sqrt(sigma2))
-  tau = c(15.56, 21.56,-22.19,-14.94)
-  beta = c(8.5, 3.5, -4.0, -8.0)
+sim <- replicate(1000, {
+  erro  <- rnorm(n_obs, 0, sqrt(sigma2))
+  y     <- mu + tau[trat] + beta[bloco] + erro
   
-  trat <- rep(1:tratamentos, each = blocos)
-  bloco <- rep(1:blocos, times = tratamentos)
+  p_bic <- summary(aov(y ~ factor(trat) + factor(bloco)))[[1]]["factor(trat)", "Pr(>F)"]
+  p_dic <- anova(aov(y ~ factor(trat)))["factor(trat)", "Pr(>F)"]
   
-  y <- mu + tau[trat] + beta[bloco] + erro
-  bic = (aov(y ~ factor(trat) + factor(bloco)))
-  p_valor <- summary(bic)[[1]]["factor(trat)", "Pr(>F)"]
-  p_valor < 0.05
+  c(bic = p_bic < 0.05, dic = p_dic < 0.05)
 })
 
-mean(sim_bic_100)
+poder_bic <- mean(sim["bic", ])
+poder_dic <- mean(sim["dic", ])
 
-sim_dic_100 <- replicate(100,{
-  erro = rnorm(n_obs,0,sqrt(sigma2))
-  tau = c(15.56, 21.56,-22.19,-14.94)
-  beta = c(8.5, 3.5, -4.0, -8.0)
-  
-  trat <- rep(1:tratamentos, each = blocos)
-  bloco <- rep(1:blocos, times = tratamentos)
-  
-  y <- mu + tau[trat] + beta[bloco] + erro
-  dic = anova(aov(y ~ factor(trat)))
-  rej <- dic$`Pr(>F)`[1] < 0.05
-  
-})
+poder_bic # 0.996
+poder_dic # 0.994 
+```
 
-mean(sim_dic_100)
+# Heatmap — Ganho de poder DBC sobre DIC
+
+```{r}
+library(ggplot2)
+
+# Grid de parâmetros
+sigma2_vec      <- seq(10, 300, by = 20)   # ruído baixo até alto
+escala_beta_vec <- seq(0, 3, by = 0.25)    # 0 = sem bloco, 1 = original, 3 = bloco forte
+
+resultados <- expand.grid(sigma2 = sigma2_vec, escala_beta = escala_beta_vec)
+resultados$poder_bic <- NA
+resultados$poder_dic <- NA
+
+for (i in 1:nrow(resultados)) {
+  s2     <- resultados$sigma2[i]
+  beta_i <- resultados$escala_beta[i] * beta  # escala o beta original
+  
+  sim <- replicate(1000, {
+    erro <- rnorm(n_obs, 0, sqrt(s2))
+    y    <- mu + tau[trat] + beta_i[bloco] + erro
+    
+    p_bic <- summary(aov(y ~ factor(trat) + factor(bloco)))[[1]]["factor(trat)", "Pr(>F)"]
+    p_dic <- anova(aov(y ~ factor(trat)))["factor(trat)", "Pr(>F)"]
+    
+    c(p_bic < 0.05, p_dic < 0.05)
+  })
+  
+  resultados$poder_bic[i] <- mean(sim[1, ])
+  resultados$poder_dic[i] <- mean(sim[2, ])
+}
+
+resultados$ganho <- resultados$poder_bic - resultados$poder_dic
+
+# Heatmap do ganho
+ggplot(resultados, aes(x = sigma2, y = escala_beta, fill = ganho)) +
+  geom_tile() +
+  scale_fill_gradient2(
+    low     = "steelblue",   # DIC melhor
+    mid     = "white",       # empate
+    high    = "firebrick",   # DBC melhor
+    midpoint = 0
+  ) +
+  geom_contour(aes(z = ganho), breaks = 0, color = "black", linewidth = 0.8) +
+  labs(
+    title    = "Ganho de poder do DBC sobre o DIC",
+    subtitle = "Linha preta = empate entre os delineamentos",
+    x        = "Variância do erro (σ²)",
+    y        = "Escala do efeito de bloco (1 = valores originais)",
+    fill     = "Δ poder"
+  ) +
+  theme_minimal()
 ```
 
