@@ -2,11 +2,13 @@
 - Modelos: revisar, mas a princípio prontos
 - Teoria dos delineamentos: detalhar?
 - Simulações: foco principal!!
-    1) efeito tratamento grande x pequeno (k = 100, 1000, 10000)
+    1) efeito tratamento grande x pequeno (k = 100, 1000, 10000)  -> como foram usados os dados dos chocolates, os efeitos de tratamento são grandes, entao o poder fica alto; o que define 
+o efeito ser grande ou nao, alguma escala? por esse exemplo real dos chocolates, usar o dic ou o bic da na mesma, entao quer dizer que efeito de tratamento grande "anula" o bloco?
     2) blocos fracos x fortes (aumentar e diminuir beta)
     3) erro baixo x alto
     4) tamanho amostral (diferentes números de blocos)
 - Tabela mostrando as comparações
 
 
- > adicionar gráficos?
+ > adicionar gráficos? manter o de calor ou ele acaba "contradizendo" as comparações que fixam parametros acima?
+ > usar set.seed para ter sempre os mesmos dados na simulação?
