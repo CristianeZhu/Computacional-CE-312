@@ -1,4 +1,3 @@
-
 ---
 title: "DIC x BIC  - Computacional"
 author: "Cristiane Zhu e Júlia Zorzo"
@@ -113,7 +112,7 @@ y <- mu + tau[trat] + beta[bloco] + erro
 y
 
 ## Análise de variância nos dois modelos
-bic = summary(aov(y ~ factor(trat) + factor(bloco)))
+bic = anova(aov(y ~ factor(trat) + factor(bloco)))
 dic = anova(aov(y ~ factor(trat)))
 bic
 dic
@@ -123,27 +122,44 @@ dic$`Pr(>F)`[1] < 0.05
 
 ```
 
-# Simulação
 
+# Efeito de tratamento pequeno vs grande
+Teste de hipótese:
+H0: médias dos tratamentos são iguais
+H1: pelo menos uma das médias dos tratamentos é diferente
+
+```{r}
+## pequeno(fazer)
+tau  <- c(0, 1, 2, 3)
+beta <- c(5, -5, 5, -5)
+sigma2 <- 16
+```
+
+
+#### Efeito de tratamento grande
 ```{r}
 sim <- replicate(1000, {
   erro  <- rnorm(n_obs, 0, sqrt(sigma2))
   y     <- mu + tau[trat] + beta[bloco] + erro
   
-  p_bic <- summary(aov(y ~ factor(trat) + factor(bloco)))[[1]]["factor(trat)", "Pr(>F)"]
-  p_dic <- anova(aov(y ~ factor(trat)))["factor(trat)", "Pr(>F)"]
+  p_bic <- summary(aov(y ~ factor(trat) + factor(bloco)))[[1]]["factor(trat)", "Pr(>F)"]  ## extrai o conteúdo da tabela 1, linha fator(trat) e coluna p- valor
+  p_dic <- summary(aov(y ~ factor(trat)))[[1]]["factor(trat)", "Pr(>F)"]
   
   c(bic = p_bic < 0.05, dic = p_dic < 0.05)
 })
 
-poder_bic <- mean(sim["bic", ])
-poder_dic <- mean(sim["dic", ])
+poder_bic <- mean(sim["bic", ]) ## Linha bic e todas as colunas(simulações)
+poder_dic <- mean(sim["dic", ]) ## Linha dic e todas as colunas(simulações)
 
 poder_bic # 0.996
 poder_dic # 0.994 
+
 ```
 
-# Heatmap — Ganho de poder DBC sobre DIC
+Resultado: ambos os modelos quase sempre detectam o efeito, pois a diferença entre as médias é muito grande. Portanto, nesse caso, não há muita vantagem em usar o BIC, DIC detecta facilmente
+
+
+#### Heatmap — Ganho de poder DBC sobre DIC
 
 ```{r}
 library(ggplot2)
@@ -165,7 +181,7 @@ for (i in 1:nrow(resultados)) {
     y    <- mu + tau[trat] + beta_i[bloco] + erro
     
     p_bic <- summary(aov(y ~ factor(trat) + factor(bloco)))[[1]]["factor(trat)", "Pr(>F)"]
-    p_dic <- anova(aov(y ~ factor(trat)))["factor(trat)", "Pr(>F)"]
+    p_dic <- summary(aov(y ~ factor(trat)))[[1]]["factor(trat)", "Pr(>F)"]
     
     c(p_bic < 0.05, p_dic < 0.05)
   })
@@ -195,4 +211,49 @@ ggplot(resultados, aes(x = sigma2, y = escala_beta, fill = ganho)) +
   ) +
   theme_minimal()
 ```
+
+
+
+
+
+
+
+# Blocos fracos x blocos fortes
+```{r}
+tau  <- c(0, 3, 6, 9)
+beta <- c(0.5, -0.5, 1, -1)
+sigma2 <- 16
+```
+
+```{r}
+tau  <- c(0, 3, 6, 9)
+beta <- c(-10, 10, -10, 10)
+sigma2 <- 16
+```
+
+
+# Erro baixo x erro alto
+```{r}
+tau  <- c(0, 3, 6, 9)
+beta <- c(-5, 5, -5, 5)
+sigma2 <- 4
+```
+
+
+```{r}
+tau  <- c(0, 3, 6, 9)
+beta <- c(-5, 5, -5, 5)
+sigma2 <- 64
+```
+
+# Tamanho amostral
+```{r}
+blocos <- 3
+```
+
+
+```{r}
+blocos <- 15
+```
+
 
