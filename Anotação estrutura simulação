@@ -1,7 +1,7 @@
 - Contexto: reorganizar
-- Modelos
-- Teoria dos delineamentos
-- Simulações
+- Modelos: revisar, mas a princípio prontos
+- Teoria dos delineamentos: detalhar?
+- Simulações: foco principal!!
     1) efeito tratamento grande x pequeno (k = 100, 1000, 10000)
     2) blocos fracos x fortes (aumentar e diminuir beta)
     3) erro baixo x alto
