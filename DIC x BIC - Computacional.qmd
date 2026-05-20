@@ -9,7 +9,7 @@ editor: visual
 
 Entre os delineamentos mais utilizados no planejamento de experimentos estão o delineamento inteiramente casualizado (DIC) e o delineamento em blocos completos casualizados (BIC). Ambos avaliam efeitos de tratamento - o que se aplica nas unidades experimentais - por meio da análise de variância (ANOVA). É natural o surgimento de dúvidas em relação à escolha do melhor delineamento, o que faz do entendimento do desempenho de cada um essencial na condução de um experimento.
 
-No delineamento inteiramente casualizado, toda variação não explicada pelos tratamentos é absorvida pelo erro. Já o BIC introduz uma estrutura de blocos que, quando relevante, retira do erro uma parcela da variabilidade — reduzindo o quadrado médio do erro e aumentando a estatística F do teste. Por essa razão, o BIC pode ter maior poder que o DIC. Porém, quando o efeito de bloco é fraco ou inexistente, o BIC perde graus de liberdade sem ganho correspondente, penalizando o teste. Portanto, nem sempre o BIC tem melhor eficácia que o DIC a depender da situação. 
+No delineamento inteiramente casualizado, toda variação não explicada pelos tratamentos é absorvida pelo erro. Já o BIC introduz uma estrutura de blocos que, quando relevante, retira do erro uma parcela da variabilidade — reduzindo o quadrado médio dele e aumentando a estatística F do teste. Por essa razão, o BIC pode ter maior poder que o DIC. Porém, quando o efeito de bloco é fraco ou inexistente, o BIC perde graus de liberdade sem ganho correspondente, penalizando o teste. Portanto, nem sempre o BIC tem melhor eficácia que o DIC a depender da situação.
 
 O poder do teste — probabilidade de rejeitar H₀ quando ela é falsa — depende simultaneamente da magnitude dos efeitos de tratamento, da variabilidade do erro e da relevância da estrutura de blocos. Como esses fatores raramente são conhecidos antes do experimento, a simulação computacional permite investigar como o poder se comporta em diferentes combinações desses parâmetros - falar mais da relevancia da simulacao (ponto chave).
 
@@ -50,7 +50,7 @@ $\varepsilon_{ij}$ independentes
 
 $$
 \varepsilon_{ij} \sim N(0,\sigma^2)
-$$ 
+$$
 
 $$
 \sum_{i=1}^{t}\tau_i = 0
@@ -108,26 +108,23 @@ trat <- rep(1:tratamentos, each = blocos)
 bloco <- rep(1:blocos, times = tratamentos)
 
 ## Modelo verdadeiro
-y <- mu + tau[trat] + beta[bloco] + erro
-y
+(y <- mu + tau[trat] + beta[bloco] + erro)
 
 ## Análise de variância nos dois modelos
-bic = anova(aov(y ~ factor(trat) + factor(bloco)))
-dic = anova(aov(y ~ factor(trat)))
-bic
-dic
+(bic = anova(aov(y ~ factor(trat) + factor(bloco))))
+(dic = anova(aov(y ~ factor(trat))))
+
 ## Poder, rejeitar H0 dado que H0 é falso
 bic$`Pr(>F)`[1] < 0.05
 dic$`Pr(>F)`[1] < 0.05
 
 ```
 
-
 # Efeito de tratamento pequeno vs grande
+
 Teste de hipótese:
 
-H0: médias dos tratamentos são iguais
-H1: pelo menos uma das médias dos tratamentos é diferente
+H0: médias dos tratamentos são iguais H1: pelo menos uma das médias dos tratamentos é diferente
 
 ```{r}
 ## pequeno(fazer)
@@ -153,11 +150,11 @@ poder_bic <- mean(sim["bic", ]) ## Linha bic e todas as colunas(simulações)
 poder_dic <- mean(sim["dic", ]) ## Linha dic e todas as colunas(simulações)
 
 poder_bic # 0.101
-poder_dic # 0.001
+poder_dic # 0.001 
 ```
 
+#### Efeito de tratamento grande: dados reais do experimento dos chocolates
 
-#### Efeito de tratamento grande
 ```{r}
 tratamentos <- 4
 blocos <- 4
@@ -190,8 +187,7 @@ poder_dic # 0.994
 
 ```
 
-Resultado: ambos os modelos quase sempre detectam o efeito, pois a diferença entre as médias é muito grande. Portanto, nesse caso, não há muita vantagem em usar o BIC, DIC detecta facilmente
-
+Resultado para efeito de tratamento grande: ambos os modelos quase sempre detectam o efeito, pois a diferença entre as médias é muito grande. Portanto, nesse caso, não há muita vantagem em usar o BIC, já que o DIC detecta facilmente essa diferença.
 
 #### Heatmap — Ganho de poder DBC sobre DIC
 
@@ -246,45 +242,109 @@ ggplot(resultados, aes(x = sigma2, y = escala_beta, fill = ganho)) +
   theme_minimal()
 ```
 
-
-
-
-
-
-
 # Blocos fracos x blocos fortes
-```{r}
-tau  <- c(0, 3, 6, 9)
-beta <- c(0.5, -0.5, 1, -1)
-sigma2 <- 16
-```
 
 ```{r}
-tau  <- c(0, 3, 6, 9)
-beta <- c(-10, 10, -10, 10)
-sigma2 <- 16
+tratamentos <- 4
+blocos      <- 4
+n_obs       <- tratamentos * blocos
+mu          <- 128
+
+trat  <- rep(1:tratamentos, each = blocos)
+bloco <- rep(1:blocos, times = tratamentos)
 ```
 
+## Bloco fraco
+
+```{r}
+tau    <- c(0, 3, 6, 9)
+beta   <- c(0.5, -0.5, 1, -1) # beta que muda
+sigma2 <- 16
+
+sim_bfraco <- replicate(1000, {
+  erro  <- rnorm(n_obs, 0, sqrt(sigma2))
+  y     <- mu + tau[trat] + beta[bloco] + erro
+
+  p_bic <- summary(aov(y ~ factor(trat) + factor(bloco)))[[1]]["factor(trat)", "Pr(>F)"]
+  p_dic <- summary(aov(y ~ factor(trat)))[[1]]["factor(trat)",  "Pr(>F)"]
+
+  c(bic = p_bic < 0.05, dic = p_dic < 0.05)
+})
+
+(poder_bic_bfraco <- mean(sim_bfraco["bic", ]))
+(poder_dic_bfraco <- mean(sim_bfraco["dic", ]))
+```
+
+## Bloco forte
+
+```{r}
+tau    <- c(0, 3, 6, 9)
+beta   <- c(-10, 10, -10, 10)
+sigma2 <- 16
+
+sim_bforte <- replicate(1000, {
+  erro  <- rnorm(n_obs, 0, sqrt(sigma2))
+  y     <- mu + tau[trat] + beta[bloco] + erro
+
+  p_bic <- summary(aov(y ~ factor(trat) + factor(bloco)))[[1]]["factor(trat)", "Pr(>F)"]
+  p_dic <- summary(aov(y ~ factor(trat)))[[1]]["factor(trat)",  "Pr(>F)"]
+
+  c(bic = p_bic < 0.05, dic = p_dic < 0.05)
+})
+
+(poder_bic_bforte <- mean(sim_bforte["bic", ]))
+(poder_dic_bforte <- mean(sim_bforte["dic", ]))
+```
 
 # Erro baixo x erro alto
+
+## Erro baixo com bloco fraco
+
 ```{r}
 tau  <- c(0, 3, 6, 9)
 beta <- c(-5, 5, -5, 5)
 sigma2 <- 4
+
+sim_ebaixo <- replicate(1000, {
+  erro  <- rnorm(n_obs, 0, sqrt(sigma2))
+  y     <- mu + tau[trat] + beta[bloco] + erro
+
+  p_bic <- summary(aov(y ~ factor(trat) + factor(bloco)))[[1]]["factor(trat)", "Pr(>F)"]
+  p_dic <- summary(aov(y ~ factor(trat)))[[1]]["factor(trat)",  "Pr(>F)"]
+
+  c(bic = p_bic < 0.05, dic = p_dic < 0.05)
+})
+
+(poder_bic_ebaixo <- mean(sim_ebaixo["bic", ]))
+(poder_dic_ebaixo <- mean(sim_ebaixo["dic", ]))
 ```
 
+## \## Erro alto com bloco fraco
 
 ```{r}
 tau  <- c(0, 3, 6, 9)
 beta <- c(-5, 5, -5, 5)
 sigma2 <- 64
+
+sim_ealto <- replicate(1000, {
+  erro  <- rnorm(n_obs, 0, sqrt(sigma2))
+  y     <- mu + tau[trat] + beta[bloco] + erro
+
+  p_bic <- summary(aov(y ~ factor(trat) + factor(bloco)))[[1]]["factor(trat)", "Pr(>F)"]
+  p_dic <- summary(aov(y ~ factor(trat)))[[1]]["factor(trat)",  "Pr(>F)"]
+
+  c(bic = p_bic < 0.05, dic = p_dic < 0.05)
+})
+
+(poder_bic_ealto <- mean(sim_ealto["bic", ]))
+(poder_dic_ealto <- mean(sim_ealto["dic", ]))
 ```
 
 # Tamanho amostral
+
 ```{r}
 blocos <- 3
 ```
-
 
 ```{r}
 blocos <- 15
