@@ -97,7 +97,20 @@ sigma2 = 124.81 # variância do erro experimental
 ## Suposições satisfeitas
 erro = rnorm(n_obs,0,sqrt(sigma2))
 tau = c(15.56, 21.56,-22.19,-14.94) # efeitos de tratamento (somatório igual a 0)
+
+##
 beta = c(8.5, 3.5, -4.0, -8.0) # efeitos de bloco (somatório igual a 0)
+# Você escolhe quanto "atribuir" aos blocos
+# Exemplo: blocos fracos — 20% da variância total vai pra bloco
+sigma2_bloco <- 0.2 * sigma2   # ≈ 25
+sigma2_erro  <- sigma2 - sigma2_bloco  # ≈ 100
+
+# Blocos fortes — 60% vai pra bloco
+sigma2_bloco_forte <- 0.6 * sigma2  # ≈ 75
+sigma2_erro_forte  <- sigma2 - sigma2_bloco_forte  # ≈ 50
+beta_raw <- rnorm(blocos, 0, sqrt(sigma2_bloco))
+beta <- beta_raw - mean(beta_raw)  # garante somatório zero
+beta
 ```
 
 ### Definir modelos
@@ -120,11 +133,12 @@ dic$`Pr(>F)`[1] < 0.05
 
 ```
 
-# Efeito de tratamento pequeno vs grande
+# (NÃO FAZER) Efeito de tratamento pequeno vs grande
 
 Teste de hipótese:
 
-H0: médias dos tratamentos são iguais H1: pelo menos uma das médias dos tratamentos é diferente
+H0: médias dos tratamentos são iguais <br>
+H1: pelo menos uma das médias dos tratamentos é diferente
 
 ```{r}
 ## pequeno(fazer)
@@ -242,7 +256,7 @@ ggplot(resultados, aes(x = sigma2, y = escala_beta, fill = ganho)) +
   theme_minimal()
 ```
 
-# Blocos fracos x blocos fortes
+# (CENÁRIO PRINCIPAL) Blocos fracos x blocos fortes
 
 ```{r}
 tratamentos <- 4
@@ -278,7 +292,7 @@ sim_bfraco <- replicate(1000, {
 ## Bloco forte
 
 ```{r}
-tau    <- c(0, 3, 6, 9)
+tau <- c(15.56, 21.56,-22.19,-14.94)
 beta   <- c(-10, 10, -10, 10)
 sigma2 <- 16
 
@@ -296,7 +310,7 @@ sim_bforte <- replicate(1000, {
 (poder_dic_bforte <- mean(sim_bforte["dic", ]))
 ```
 
-# Erro baixo x erro alto
+# (NÃO FAZER) Erro baixo x erro alto
 
 ## Erro baixo com bloco fraco
 
@@ -319,7 +333,7 @@ sim_ebaixo <- replicate(1000, {
 (poder_dic_ebaixo <- mean(sim_ebaixo["dic", ]))
 ```
 
-## \## Erro alto com bloco fraco
+## Erro alto com bloco fraco
 
 ```{r}
 tau  <- c(0, 3, 6, 9)
@@ -339,15 +353,4 @@ sim_ealto <- replicate(1000, {
 (poder_bic_ealto <- mean(sim_ealto["bic", ]))
 (poder_dic_ealto <- mean(sim_ealto["dic", ]))
 ```
-
-# Tamanho amostral
-
-```{r}
-blocos <- 3
-```
-
-```{r}
-blocos <- 15
-```
-
 
