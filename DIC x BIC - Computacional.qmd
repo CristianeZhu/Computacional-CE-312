@@ -138,6 +138,7 @@ dic$`Pr(>F)`[1] < 0.05
 
 # Blocos fracos x blocos fortes
 
+## Bloco Fraco
 ### Fixando valores
 ```{r}
 tratamentos <- 4
@@ -158,15 +159,16 @@ trat  <- rep(1:tratamentos, times = blocos)
 bloco <- rep(1:blocos, each = tratamentos)
 ```
 
-### Simulação de poder para blocos com pouco efeito
+### Significância para bloco fraco
 Como definir blocos com efeitos baixos?
 Analisar a significância do efeito dos blocos para os valores escolhidos
 
 ```{r}
+set.seed(123)
 # beta
 beta_fraco <- c(0.5, -0.5, 1, -1)
 
-significancia_beta <- replicate(1000, {
+significancia_beta_f <- replicate(1000, {
   erro  <- rnorm(n_obs, 0, sqrt(sigma2))
   y     <- mu + tau[trat] + beta_fraco[bloco] + erro
 
@@ -174,13 +176,14 @@ significancia_beta <- replicate(1000, {
   p_bic < 0.05
 
 })
-mean(significancia_beta)
+mean(significancia_beta_f)
 ```
 
 Com esse efeito de beta definido, é possível verificar que só aproximadamente 5% das simulações rejeitam H0, então a maior parte das simulações mostram que beta não é eficaz neste cenário. Isso é exatamente o que queremos nesse caso, efeito de blocos baixos
 
 ### Teste de poder
 ```{r}
+set.seed(123)
 sim_bfraco <- replicate(1000, {
   erro  <- rnorm(n_obs, 0, sqrt(sigma2))
   y     <- mu + tau[trat] + beta_fraco[bloco] + erro
@@ -188,30 +191,69 @@ sim_bfraco <- replicate(1000, {
   p_bic <- summary(aov(y ~ factor(trat) + factor(bloco)))[[1]]["factor(trat)", "Pr(>F)"]
   p_dic <- summary(aov(y ~ factor(trat)))[[1]]["factor(trat)",  "Pr(>F)"]
 
-  c(bic = p_bic < 0.05, dic = p_dic < 0.05)
+  c(bic = p_bic < 0.05, dic = p_dic < 0.05,
+    p_bic = p_bic, p_dic = p_dic)
+
 })
 
 (poder_bic_bfraco <- mean(sim_bfraco["bic", ]))
 (poder_dic_bfraco <- mean(sim_bfraco["dic", ]))
 
 
-## 0.402 40% das sim detectaram rejeição de H0 dado q ele é falso
-## 0.444
+## 0.406 40% das sim detectaram rejeição de H0 dado q ele é falso
+## 0.457
 ```
 Para um efeito de bloco baixo, foi possível notar que o poder foi parecido para os dois modelos e um pouco maior para DIC
 
 
+```{r}
+library(ggplot2)
+# P-valores p gráfico
+p_bic_fraco <- sim_bfraco["p_bic", ]
+p_dic_fraco <- sim_bfraco["p_dic", ]
+pvalores <- data.frame(
+  p = c(p_bic_fraco, p_dic_fraco),
+  modelo = rep(c("BIC", "DIC"), each = 1000)
+)
+
+ggplot(pvalores, aes(x = p, fill = modelo)) +
+  geom_histogram(alpha = 0.6, bins = 30, position = "identity") +
+  geom_vline(xintercept = 0.05, linetype = "dashed") +
+  facet_wrap(~modelo) +
+  theme_minimal()
+```
+
 
 ## Bloco forte
 
-```{r}
-tau <- c(0, 3, 6, -9)
-beta   <- c(-10, 10, -10, 10)
-sigma2 <- 16
+### Significãncia para bloco forte
+Como definir blocos com efeitos altos?
+Analisar a significância do efeito dos blocos para os valores escolhidos
 
+```{r}
+set.seed(123)
+# beta
+beta_forte <- c(-15, 15, -15, 15)
+
+significancia_beta_a <- replicate(1000, {
+  erro  <- rnorm(n_obs, 0, sqrt(sigma2))
+  y     <- mu + tau[trat] + beta_forte[bloco] + erro
+
+  p_bic <- summary(aov(y ~ factor(trat) + factor(bloco)))[[1]]["factor(bloco)", "Pr(>F)"]
+  p_bic < 0.05
+
+})
+mean(significancia_beta_a)
+#0.969
+```
+
+Com esse efeito de beta definido, é possível verificar que aproximadamente 97% das simulações rejeitam H0, então a maior parte das simulações mostram que beta é eficaz neste cenário. Isso é exatamente o que queremos nesse caso, efeito de blocos fortes
+
+### Teste de poder
+```{r}
 sim_bforte <- replicate(1000, {
   erro  <- rnorm(n_obs, 0, sqrt(sigma2))
-  y     <- mu + tau[trat] + beta[bloco] + erro
+  y     <- mu + tau[trat] + beta_forte[bloco] + erro
 
   p_bic <- summary(aov(y ~ factor(trat) + factor(bloco)))[[1]]["factor(trat)", "Pr(>F)"]
   p_dic <- summary(aov(y ~ factor(trat)))[[1]]["factor(trat)",  "Pr(>F)"]
@@ -222,9 +264,43 @@ sim_bforte <- replicate(1000, {
 (poder_bic_bforte <- mean(sim_bforte["bic", ]))
 (poder_dic_bforte <- mean(sim_bforte["dic", ]))
 ```
+O DIC deu 0.024, ou seja, quase nunca detecta o efeito dos tratamentos quando os blocos são fortes. Já o DBC deu 0.423, quase 18 vezes mais poder que o DIC.
 
+## Bloco intermediário
+### Significãncia para blocos intermediários
+```{r}
+set.seed(123)
+# beta
+beta_inter <- c(-10, 10, -10, 10)
 
+significancia_beta_inter <- replicate(1000, {
+  erro  <- rnorm(n_obs, 0, sqrt(sigma2))
+  y     <- mu + tau[trat] + beta_inter[bloco] + erro
 
+  p_bic <- summary(aov(y ~ factor(trat) + factor(bloco)))[[1]]["factor(bloco)", "Pr(>F)"]
+  p_bic < 0.05
+
+})
+mean(significancia_beta_inter)
+# 0.665
+```
+Com esse efeito de beta definido, é possível verificar que aproximadamente 67% das simulações rejeitam H0, então mais ou menos metade dos testes detectam que beta é eficaz neste cenário. Isso é exatamente o que queremos nesse caso, efeito de blocos intermediários
+
+### Teste de poder
+```{r}
+sim_binter <- replicate(1000, {
+  erro  <- rnorm(n_obs, 0, sqrt(sigma2))
+  y     <- mu + tau[trat] + beta_inter[bloco] + erro
+
+  p_bic <- summary(aov(y ~ factor(trat) + factor(bloco)))[[1]]["factor(trat)", "Pr(>F)"]
+  p_dic <- summary(aov(y ~ factor(trat)))[[1]]["factor(trat)",  "Pr(>F)"]
+
+  c(bic = p_bic < 0.05, dic = p_dic < 0.05)
+})
+
+(poder_bic_binte <- mean(sim_binter["bic", ]))
+(poder_dic_binter <- mean(sim_binter["dic", ]))
+```
 
 
 
