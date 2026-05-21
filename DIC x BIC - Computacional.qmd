@@ -138,26 +138,52 @@ dic$`Pr(>F)`[1] < 0.05
 
 # Blocos fracos x blocos fortes
 
+### Fixando valores
 ```{r}
 tratamentos <- 4
-blocos      <- 4
-n_obs       <- tratamentos * blocos
-mu          <- 128
+blocos <- 4
+n_obs <- tratamentos * blocos
+mu <- 100
+tau <- c(0, 4, 8, -12) ## efeito dos tratamentos PRECISA ser significativo
 
-trat  <- rep(1:tratamentos, each = blocos)
-bloco <- rep(1:blocos, times = tratamentos)
+## cálculo do sigma de acordo com o tau e mu
+
+# Para escolher o sigma2, vamos calcular o f de Cohen (ele define o poder que a gnt quer observar)
+sigma2 <- 126
+
+f = sqrt(mean(tau^2) / sigma2) # 0.5 (poder aproximado para DIC)
+
+## Combinação dos i e j para compor as obsrvações yij
+trat  <- rep(1:tratamentos, times = blocos)
+bloco <- rep(1:blocos, each = tratamentos)
 ```
 
-## Bloco fraco
+### Simulação de poder para blocos com pouco efeito
+Como definir blocos com efeitos baixos?
+Analisar a significância do efeito dos blocos para os valores escolhidos
 
 ```{r}
-tau    <- c(0, 3, 6, -9)
-beta   <- c(0.5, -0.5, 1, -1) # beta que muda
-sigma2 <- 16
+# beta
+beta_fraco <- c(0.5, -0.5, 1, -1)
 
+significancia_beta <- replicate(1000, {
+  erro  <- rnorm(n_obs, 0, sqrt(sigma2))
+  y     <- mu + tau[trat] + beta_fraco[bloco] + erro
+
+  p_bic <- summary(aov(y ~ factor(trat) + factor(bloco)))[[1]]["factor(bloco)", "Pr(>F)"]
+  p_bic < 0.05
+
+})
+mean(significancia_beta)
+```
+
+Com esse efeito de beta definido, é possível verificar que só aproximadamente 5% das simulações rejeitam H0, então a maior parte das simulações mostram que beta não é eficaz neste cenário. Isso é exatamente o que queremos nesse caso, efeito de blocos baixos
+
+### Teste de poder
+```{r}
 sim_bfraco <- replicate(1000, {
   erro  <- rnorm(n_obs, 0, sqrt(sigma2))
-  y     <- mu + tau[trat] + beta[bloco] + erro
+  y     <- mu + tau[trat] + beta_fraco[bloco] + erro
 
   p_bic <- summary(aov(y ~ factor(trat) + factor(bloco)))[[1]]["factor(trat)", "Pr(>F)"]
   p_dic <- summary(aov(y ~ factor(trat)))[[1]]["factor(trat)",  "Pr(>F)"]
@@ -167,7 +193,14 @@ sim_bfraco <- replicate(1000, {
 
 (poder_bic_bfraco <- mean(sim_bfraco["bic", ]))
 (poder_dic_bfraco <- mean(sim_bfraco["dic", ]))
+
+
+## 0.402 40% das sim detectaram rejeição de H0 dado q ele é falso
+## 0.444
 ```
+Para um efeito de bloco baixo, foi possível notar que o poder foi parecido para os dois modelos e um pouco maior para DIC
+
+
 
 ## Bloco forte
 
@@ -189,6 +222,11 @@ sim_bforte <- replicate(1000, {
 (poder_bic_bforte <- mean(sim_bforte["bic", ]))
 (poder_dic_bforte <- mean(sim_bforte["dic", ]))
 ```
+
+
+
+
+
 
 -> testar a significancia do bloco pela rejeicao ou nao da anova (abrir a analise)
 
