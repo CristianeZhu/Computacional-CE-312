@@ -204,21 +204,20 @@ f_Cohen <- 0.667
 Calcula o poder entre 0.4 e 0.5 para gerar variâncias potenciais.
 ```{r}
 set.seed(123)
-nsim    <- 1000
+nsim    <- 100
 alpha   <- 0.05
 sigmas  <- seq(50, 300, by = 1)
 poderes <- c()
 
-for(s in sigmas){
-  rejeitou <- 0
-  for(i in 1:nsim){
+poderes <- sapply(sigmas, function(s) {
+  rejeitou <- replicate(nsim, {
     y   <- mu + tau[trat] + rnorm(n_obs, 0, sqrt(s))
-    fit <- aov(y ~ factor(trat))
-    p   <- summary(fit)[[1]][["Pr(>F)"]][1]
-    if(p < alpha) rejeitou <- rejeitou + 1
-  }
-  poderes <- c(poderes, rejeitou / nsim)
-}
+    p   <- summary(aov(y ~ factor(trat)))[[1]][["Pr(>F)"]][1]
+    p < alpha
+  })
+  mean(rejeitou)
+})
+
 
 # Resultado
 resultado <- data.frame(sigma2 = sigmas, poder = poderes)
