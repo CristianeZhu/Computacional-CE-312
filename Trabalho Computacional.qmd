@@ -5,6 +5,46 @@ format: html
 editor: visual
 ---
 
+
+#Vamos usar? (acho que n precisa)
+
+## Gráfico de calor
+
+library(ggplot2)
+
+# beta base para escalar — usando beta_inter como referência
+
+beta_base \<- beta_inter \# c(-10, 10, -10, 10)
+
+# grid de parâmetros
+
+sigma2_vec \<- seq(10, 300, by = 20) escala_beta_vec \<- seq(0, 3, by = 0.25)
+
+resultados_heat \<- expand.grid(sigma2 = sigma2_vec, escala_beta = escala_beta_vec) resultados_heat$poder_bic <- NA
+resultados_heat$poder_dic \<- NA
+
+set.seed(123) for (i in 1:nrow(resultados_heat)) { s2 \<- resultados_heat$sigma2[i]
+  beta_i <- resultados_heat$escala_beta\[i\] \* beta_base
+
+sim \<- replicate(1000, { erro \<- rnorm(n_obs, 0, sqrt(s2)) y \<- mu + tau\[trat\] + beta_i\[bloco\] + erro
+
+```         
+p_bic <- summary(aov(y ~ factor(trat) + factor(bloco)))[[1]]["factor(trat)", "Pr(>F)"]
+p_dic <- summary(aov(y ~ factor(trat)))[[1]]["factor(trat)", "Pr(>F)"]
+
+c(p_bic < 0.05, p_dic < 0.05)
+```
+
+})
+
+resultados_heat$poder_bic[i] <- mean(sim[1, ])
+  resultados_heat$poder_dic\[i\] \<- mean(sim\[2, \]) }
+
+resultados_heat$ganho <- resultados_heat$poder_bic - resultados_heat\$poder_dic
+
+ggplot(resultados_heat, aes(x = sigma2, y = escala_beta, fill = ganho)) + geom_tile() + scale_fill_gradient2( low = "#4A90D9", mid = "white", high = "#FA8072", midpoint = 0 ) + geom_contour(aes(z = ganho), breaks = 0, color = "black", linewidth = 0.8) + labs( title = "Ganho de poder do BIC sobre o DIC", subtitle = "Linha preta = empate entre os delineamentos", x = "Variância do erro (σ²)", y = "Escala do efeito de bloco (1 = beta_inter)", fill = "Δ poder" ) + theme_minimal(base_size = 13)
+
+
 Comparação do poder da ANOVA no Delineamento Inteiramente Casualizado e no Delineamento em Blocos Completos Inteiramente Casualizados <br>
 
 Notas: Ideias iniciais de simulação: valores fixos de variancia, efeitos e amostra -\> <br> poder do teste pra esses diferentes casos <br> Aumentar numero de simulacoes? <br>
