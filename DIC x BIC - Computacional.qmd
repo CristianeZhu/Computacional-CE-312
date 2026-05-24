@@ -95,7 +95,6 @@ tabela_dbc <- data.frame(
   `F`   = c("QMTrat/QMRes", "QMBloco/QMRes", "-", "-"),
   check.names = FALSE
 )
-tabela_dbc
 ```
 
 ```{r}
@@ -103,7 +102,7 @@ tabela_dbc
 
 knitr::kable(
   tabela_dic,
-  caption = "Anova para DIC"
+  caption = "Tabela Anova para DIC"
 )
 ```
 
@@ -204,7 +203,7 @@ f_Cohen <- 0.667
 Calcula o poder entre 0.4 e 0.5 para gerar variâncias potenciais.
 ```{r}
 set.seed(123)
-nsim    <- 100
+nsim    <- 500
 alpha   <- 0.05
 sigmas  <- seq(50, 300, by = 1)
 poderes <- c()
@@ -217,7 +216,6 @@ poderes <- sapply(sigmas, function(s) {
   })
   mean(rejeitou)
 })
-
 
 # Resultado
 resultado <- data.frame(sigma2 = sigmas, poder = poderes)
@@ -289,7 +287,7 @@ ggplot(pvalores, aes(x = p, fill = modelo)) +
   geom_vline(xintercept = 0.05, linetype = "dashed") +
   scale_fill_manual(values = c("BIC" = "#110C5E", "DIC" = "#029C57")) +
   facet_wrap(~modelo) +
-  theme_minimal()
+  theme_minimal(base_family = "serif")
 ```
 
 O gráfico mostra que, no cenário de bloco fraco, a maioria dos p-valores de ambos os modelos se concentra abaixo de 0,05, indicando poder moderado (\~40%) para os dois. O DIC apresenta poder um pouco superior ao DBC nesse cenário, pois o DBC utiliza graus de liberdade para estimar o efeito de bloco, sendo desnecessário para quando o bloco tem pouco efeito. <br>
@@ -321,7 +319,6 @@ resultados_bfraco <- lapply(B_vals, function(B) {
 })
 
 tabela_bfraco <- do.call(rbind, resultados_bfraco)
-
 ```
 
 ```{r}
@@ -395,7 +392,7 @@ ggplot(pvalores_inter, aes(x = p_valor, fill = modelo)) +
   geom_vline(xintercept = 0.05, linetype = "dashed") +
   facet_wrap(~modelo) +
   scale_fill_manual(values = c("BIC" = "#110C5E", "DIC" = "#029C57")) +
-  theme_minimal()
+  theme_minimal(base_family = "serif")
   
 ```
 
@@ -433,7 +430,7 @@ tabela_binter <- do.call(rbind, resultados_binter)
 #| echo: false
 
 knitr::kable(
-  tabela_bfraco,
+  tabela_binter,
   caption = "Resultado dos poderes para efeito de bloco intermediário para diferentes números de réplicas"
 )
 ```
@@ -503,7 +500,7 @@ ggplot(pvalores, aes(x = p, fill = modelo)) +
   geom_vline(xintercept = 0.05, linetype = "dashed") +
   facet_wrap(~modelo) +
   scale_fill_manual(values = c("BIC" = "#110C5E", "DIC" = "#029C57")) +
-  theme_minimal()
+  theme_minimal(base_family = "serif")
 ```
 
 O gráfico mostra que, no cenário de bloco forte, a maioria dos p-valores no modelo BIC se concentra abaixo de 0,05, indicando poder moderado (\~40%) e para DIC quase todos os valores estão acima de 0.05 . O DIC apresenta poder significantemente inferior ao BIC nesse cenário.
@@ -540,7 +537,7 @@ tabela_bforte <- do.call(rbind, resultados_bforte)
 #| echo: false
 
 knitr::kable(
-  tabela_bfraco,
+  tabela_bforte,
   caption = "Resultado dos poderes para efeito de bloco altos para diferentes números de réplicas"
 )
 ```
@@ -548,6 +545,8 @@ knitr::kable(
 ## Todos os gráficos de poder
 
 ```{r}
+#| echo: false
+
 library(ggplot2)
 
 # monta os três data frames e empilha
@@ -580,11 +579,12 @@ ggplot(pvalores_todos, aes(x = p, fill = modelo)) +
   facet_grid(cenario ~ modelo) +
   scale_fill_manual(values = c("BIC" = "#110C5E", "DIC" = "#029C57")) +
   labs(
+    title = "Comparação da distribuição dos p-valores para cada modelo nos três cenários",
     x    = "p-valor",
     y    = "frequência",
     fill = NULL
   ) +
-  theme_minimal(base_size = 12) +
+  theme_minimal(base_size = 12, base_family = "serif") +
   theme(legend.position = "none")
 ```
 
@@ -595,6 +595,7 @@ Foi possível verificar que para o modelo BIC, o poder se mantém constante pois
 Diferente de DIC, já que todo o efeito do bloco vai para o resíduo, aumentando o quadrado médio do resíduo e diminuindo o valor da estátistica F.
 
 ```{r}
+#| echo: false
 library(ggplot2)
 library(tidyr)
 
@@ -629,16 +630,20 @@ ggplot(tabela_long, aes(x = cenario, y = poder, fill = modelo)) +
     fill  = NULL,
     title = "Poder do teste por cenário de bloco"
   ) +
-  theme_minimal(base_size = 13) +
-  theme(legend.position = "top")
+  theme_minimal(base_size = 12, base_family = "serif") +
+  theme(legend.position = "top",
+         panel.grid.major = element_blank(),
+    panel.grid.minor = element_blank(),
+    plot.title       = element_text(hjust = 0.5),
+  panel.border     = element_rect(color = "gray80", fill = NA, linewidth = 0.5))
 ```
 
 
 ## Gráfico de linha
 
-Em qual intensidade de efeito de blocos o bic supera o dic - ponto de cruzamento? e como fica o comportamento deles?
+Para identificar o ponto a partir do qual o DBC supera o DIC em poder, foi realizada uma simulação com diferentes intensidades de efeito de bloco. Diferente dos cenários anteriores, em que os valores de β foram fixados, aqui os efeitos de bloco foram gerados aleatoriamente a cada replicação a partir de uma distribuição normal com média zero e desvio padrão s variando de 0 a 20. Essa abordagem torna a simulação mais geral, pois não assume um padrão específico de blocos. <br>
 
-Explicar que aqui a gnt gerou betas aleatórios, não fixamos que nem nas simulações anteriores. Isso torna mais geral a simulação. - Podemos explicar que fizemos com betas fixos para mostrar como seria o padrão e aqui num contexto generalizado , comprovando
+O gráfico de linhas evidencia que, para intensidades baixas de efeito de bloco, os dois modelos apresentam poder similar, com o DIC levemente superior — resultado consistente com os cenários fixos anteriores. À medida que a intensidade aumenta, o poder do DIC cai progressivamente, enquanto o DBC se mantém estável. O ponto de cruzamento, onde o DBC passa a superar o DIC, ocorre em s aproximadamente igual a 4, confirmando que o DBC só se justifica quando há heterogeneidade relevante entre as unidades experimentais. A partir desse ponto, a vantagem do DBC se torna cada vez maior chegando a poder quase nulo para o DIC nas maiores intensidades.
 
 ```{r}
 intensidades <- seq(0, 20, by = 1)
@@ -671,6 +676,7 @@ df <- do.call(rbind, resultados)
 ```
 
 ```{r}
+#| echo: false
 library(ggplot2)
 library(tidyr)
 
@@ -683,12 +689,12 @@ df_long <- pivot_longer(df,
 ggplot(df_long, aes(x = intensidade, y = poder, color = modelo, linetype = modelo)) +
   geom_line(linewidth = 1) +
   geom_point(size = 2) +
-  geom_vline(xintercept = 4, linetype = "dashed", color = "gray60") +
-  annotate("text", x = 4.1, y = 0.55,
+  geom_vline(xintercept = 3, linetype = "dashed", color = "gray60") +
+  annotate("text", x = 3.1, y = 0.55,
            label = "ponto de cruzamento",
            hjust = 0, size = 3.5, color = "gray40") +
   scale_color_manual(
-    values = c(poder_dbc = "#1D9E75", poder_dic = "#378ADD"),
+    values = c(poder_dbc = "#029C57", poder_dic = "#110C5E"),
     labels = c("DBC", "DIC")
   ) +
   scale_linetype_manual(
@@ -698,11 +704,14 @@ ggplot(df_long, aes(x = intensidade, y = poder, color = modelo, linetype = model
   scale_x_continuous(breaks = seq(0, 20, by = 2)) +
   scale_y_continuous(limits = c(0, 0.6), breaks = seq(0, 0.6, by = 0.1)) +
   labs(
+    title = "Poder empírico do DBC e DIC por intensidade do efeito de bloco",
     x        = "intensidade do efeito de bloco (s)",
     y        = "poder empírico",
     color    = NULL,
     linetype = NULL
   ) +
-  theme_minimal(base_size = 13) +
+  theme_minimal(base_size = 13, base_family = "serif") + 
   theme(legend.position = "top")
+
+
 ```
