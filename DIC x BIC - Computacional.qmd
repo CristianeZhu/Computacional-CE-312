@@ -497,7 +497,11 @@ res_rep <- rbind(
   cbind(cenario = "Bloco intermediário", do.call(rbind, simula_replicas(beta_inter, replicas))),
   cbind(cenario = "Bloco forte",         do.call(rbind, simula_replicas(beta_forte, replicas)))
 )
+```
 
+
+```{r}
+#| echo: false
 knitr::kable(
   res_rep[res_rep$cenario == "Bloco fraco", -1],
   caption = "Poder empírico do DIC e BIC — Bloco fraco"
@@ -513,6 +517,7 @@ knitr::kable(
   caption = "Poder empírico do DIC e BIC — Bloco forte"
 )
 ```
+
 Em todos os cenários, os valores de poder se estabilizam conforme o número de réplicas aumenta. De 100 para 10000 replicações, a variação é pequena, sustentando o uso padrão de 1000 repetições como suficiente para estimativas confiáveis. 
 
 
@@ -592,6 +597,7 @@ df <- do.call(rbind, resultados)
 ```
 
 ```{r}
+#| echo: false
 df_long <- pivot_longer(df,
   cols      = c(poder_dic, poder_bic),
   names_to  = "modelo",
