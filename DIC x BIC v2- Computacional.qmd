@@ -415,10 +415,10 @@ set.seed(123)
 
 replicas <- c(100, 1000, 10000)
 
-simula_replicas <- function(beta, replicas) {
+simula_replicas1 <- function(beta, replicas) {
   lapply(replicas, function(B) {
     sim <- replicate(B, {
-      erro  <- rnorm(n_obs, 0, sqrt(sigma2))
+      erro  <- rnorm(n_obs, 0, sqrt(sigma2_erro_fraco))
       y     <- mu + tau[trat] + beta[bloco] + erro
       
       p_bic <- summary(aov(y ~ factor(trat) + factor(bloco)))[[1]]["factor(trat)", "Pr(>F)"]
@@ -429,16 +429,56 @@ simula_replicas <- function(beta, replicas) {
     
     data.frame(
       replicacoes = B,
-      poder_dic   = mean(sim["dic", ]),
-      poder_bic   = mean(sim["bic", ])
+      poder_dic   = round(mean(sim["dic", ]),3),
+      poder_bic   = round(mean(sim["bic", ]),3)
+    )
+  })
+}
+
+simula_replicas2 <- function(beta, replicas) {
+  lapply(replicas, function(B) {
+    sim <- replicate(B, {
+      erro  <- rnorm(n_obs, 0, sqrt(sigma2_erro_inter))
+      y     <- mu + tau[trat] + beta[bloco] + erro
+      
+      p_bic <- summary(aov(y ~ factor(trat) + factor(bloco)))[[1]]["factor(trat)", "Pr(>F)"]
+      p_dic <- summary(aov(y ~ factor(trat)))[[1]]["factor(trat)", "Pr(>F)"]
+      
+      c(bic = p_bic < 0.05, dic = p_dic < 0.05)
+    })
+    
+    data.frame(
+      replicacoes = B,
+      poder_dic   = round(mean(sim["dic", ]),3),
+      poder_bic   = round(mean(sim["bic", ]),3)
+    )
+  })
+}
+
+simula_replicas3 <- function(beta, replicas) {
+  lapply(replicas, function(B) {
+    sim <- replicate(B, {
+      erro  <- rnorm(n_obs, 0, sqrt(sigma2_erro_forte))
+      y     <- mu + tau[trat] + beta[bloco] + erro
+      
+      p_bic <- summary(aov(y ~ factor(trat) + factor(bloco)))[[1]]["factor(trat)", "Pr(>F)"]
+      p_dic <- summary(aov(y ~ factor(trat)))[[1]]["factor(trat)", "Pr(>F)"]
+      
+      c(bic = p_bic < 0.05, dic = p_dic < 0.05)
+    })
+    
+    data.frame(
+      replicacoes = B,
+      poder_dic   = round(mean(sim["dic", ]),3),
+      poder_bic   = round(mean(sim["bic", ]),3)
     )
   })
 }
 
 res_rep <- rbind(
-  cbind(cenario = "Bloco fraco",         do.call(rbind, simula_replicas(beta_fraco, replicas))),
-  cbind(cenario = "Bloco intermediário", do.call(rbind, simula_replicas(beta_inter, replicas))),
-  cbind(cenario = "Bloco forte",         do.call(rbind, simula_replicas(beta_forte, replicas)))
+  cbind(cenario = "Bloco fraco",         do.call(rbind, simula_replicas1(beta_fraco, replicas))),
+  cbind(cenario = "Bloco intermediário", do.call(rbind, simula_replicas2(beta_inter, replicas))),
+  cbind(cenario = "Bloco forte",         do.call(rbind, simula_replicas3(beta_forte, replicas)))
 )
 ```
 
