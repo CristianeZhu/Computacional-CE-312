@@ -16,13 +16,13 @@ editor: visual
 
 # Contextualização
 
-Entre os delineamentos mais utilizados no planejamento de experimentos estão o **delineamento inteiramente casualizado (DIC)** e o **delineamento em blocos completos casualizados (BIC)**. Ambos avaliam os efeitos de tratamento - o que se aplica nas unidades experimentais - por meio da análise de variância (ANOVA). É natural o surgimento de dúvidas em relação à escolha do melhor delineamento, por isso é essencial compreender o desempenho de cada um deles dado o contexto específico a fim de conduzir um experimento adequadamente.
+Entre os delineamentos mais utilizados no planejamento de experimentos estão o **delineamento inteiramente casualizado (DIC)** e o **delineamento em blocos completos casualizados (BIC)**. Ambos avaliam os efeitos de tratamento - o que se aplica nas unidades experimentais - por meio da análise de variância (ANOVA). A fim de conduzir um experimento adequadamente, é natural o surgimento de dúvidas em relação à escolha do melhor delineamento, sendo essencial, portanto, compreender o desempenho de cada um dado o contexto específico.
 
-No delineamento inteiramente casualizado, toda variação não explicada pelos tratamentos é absorvida pelo erro. Já o BIC introduz uma estrutura de blocos que, quando relevante, retira do erro uma parcela da variabilidade — reduzindo o quadrado médio dele e aumentando a estatística F do teste. Por essa razão, o BIC pode ter maior poder que o DIC. Porém, quando o efeito de bloco é fraco ou inexistente, o BIC perde graus de liberdade sem qualquer ganho correspondente, penalizando o teste. Portanto, nem sempre o delineamento em blocos é a melhor escolha para o experimento, já que não apresenta melhor eficácia que o delineamento inteiramente casualizado em todos os casos.
+No delineamento inteiramente casualizado, toda variação não explicada pelos tratamentos é absorvida pelo erro. Já o BIC introduz uma estrutura de blocos que, quando relevante, retira do erro uma parcela da variabilidade — reduzindo o quadrado médio dele e aumentando a estatística F do teste. Por essa razão, o BIC pode ter maior poder que o DIC. Porém, quando o efeito de bloco é fraco ou inexistente, o BIC perde graus de liberdade sem qualquer ganho correspondente, penalizando o teste. Dessa forma, nem sempre o delineamento em blocos é a melhor escolha para o determinado experimento, já que não apresenta melhor eficácia que o delineamento inteiramente casualizado em todos os casos.
 
-O poder do teste — probabilidade de rejeitar a hipótese nula quando ela é falsa — depende simultaneamente da magnitude dos efeitos de tratamento, da variabilidade do erro e da relevância da estrutura de blocos. Como esses fatores raramente são conhecidos antes do experimento, a simulação computacional permite investigar como o poder se comporta em diferentes cenários fixados com diferenciação dos blocos.
+O poder do teste — probabilidade de rejeitar a hipótese nula quando ela é falsa — depende simultaneamente da magnitude dos efeitos de tratamento, da variabilidade do erro e da relevância da estrutura de blocos. Como esses fatores raramente são conhecidos a priori, a simulação computacional permite investigar como o poder se comporta em múltiplas replicações do experimento com diferenciação dos blocos para um cenário fixado, o qual pode ser alterado de acordo com o que se pretende observar nos resultados de desempenho.
 
-Dessa forma, o objetivo desse trabalho é comparar o poder empírico do DIC e do BIC por meio de simulações de Monte Carlo, em que são fixados parâmetros e variadas as intensidades dos efeitos de bloco, pode-se discutir precisamente o comportamento dos delineamentos, evidenciando principalmente o ponto em que BIC passa a ser preferível em relação ao DIC para determinado experimento, dado um panorama em que o efeito de tratamento pode ser facilmente confundido com o resíduo.
+Diante disso, o objetivo deste trabalho é comparar o poder empírico do DIC e do BIC por meio de simulações de Monte Carlo. Para tanto, fixam-se parâmetros e variam-se as intensidades dos efeitos de bloco. Por meio dessas análises, evidencia-se principalmente o ponto em que o delineamento em blocos completos passa a ser preferível ao inteiramente casualizado, para o determinado experimento, ilustrando o resultado das simulações juntamente às demais representações gráficas incluídas.
 
 # Teoria
 
@@ -73,7 +73,7 @@ $$
 
 ### ANOVA: Análise de Variância
 
-A ANOVA decompõe a variação total dos dados em fontes identificáveis, avaliando se a variação atribuída aos tratamentos supera o ruído dos resíduos. Para isso, são calculadas somas de quadrados e quadrados médios que são utilizadas na operação da estatística de teste F, como ilustrado nas tabelas:
+A ANOVA decompõe a variação total dos dados em fontes identificáveis, avaliando se a variação atribuída aos tratamentos supera o ruído dos resíduos. Para isso, são calculadas somas de quadrados e quadrados médios, utilizados na obtenção matemática da estatística de teste F, como ilustrado nas tabelas:
 
 ```{r}
 #| echo: false
@@ -133,7 +133,7 @@ Pelo menos um efeito de tratamento difere de zero
 $$
 H_1: \exists \, i \text{ tal que } \tau_i \neq 0
 $$
-Como deseja-se avaliar o poder do teste, a probabilidade de rejeitar a hipótese nula dado que ela é falsa, essa hipótese é rejeitada, portanto considera-se que pelo menos um efeito de tratamento difere de zero.
+Como se deseja avaliar o poder do teste, a probabilidade de rejeitar a hipótese nula dado que ela é falsa, essa hipótese é rejeitada, portanto considera-se que pelo menos um efeito de tratamento difere de zero.
 
 No caso do BIC, as mesmas hipóteses são consideradas para o efeito do bloco:
 
@@ -176,22 +176,31 @@ bloco <- rep(1:blocos, each = tratamentos)
 
 mu <- 100
 
-## tau com efeitos significativos
+# tau arbitrário com efeitos significativos:
 tau <- c(0, 4, 8, -12) 
 ```
 
-Em que n_obs é o número de observações, mu é a média geral das observações e tau o efeito de tratamento, necessariamente significativo.
+Em que n_obs é o número de observações, mu é a média geral das observações e tau o efeito de tratamento, necessariamente significativo, já que as diferenças de poder derivam de uma hipótese alternativa verdadeira.
 
 ### Escolha da variância
 
-Escolha de uma variância arbitrária
-
 ```{r}
+# escolha de uma variância arbitrária
 sigma2 <- 126
 ```
 
+Como a variância dos resíduos é superior à variância dos efeitos de tratamento (56), a detecção desses efeitos não é trivial. Ao mesmo tempo, essa razão não é suficientemente extrema — nem pequena a ponto de tornar o poder próximo de 1, nem grande a ponto de torná-lo próximo de 0 — configurando, portanto, um cenário de detecção moderada que favorece a diferenciação do poder empírico entre os delineamentos.
+
 ### Efeitos de bloco
-Para comparar o poder entre os modelos DIC e BIC, escolhemos três cenários de intensidade dos efeitos de bloco: fraco, intermediário e forte.
+Para comparar o poder entre os modelos DIC e BIC, três cenários de intensidade dos efeitos de bloco são propostos: fraco, intermediário e forte.
+
+#### Normalidade
+É importante sinalizar que considera-se o efeito do j-ésimo bloco como uma variável normal, garantindo a suposição inicialmente apontada para os blocos. Sua distribuição é dada por:
+
+$$
+\beta_{j} \sim N(0,s^2)
+$$
+Essa escolha é justificada pelo princípio da máxima entropia: a distribuição normal é a menos restritiva, ou seja, qualquer outra distribuição introduziria suposições adicionais às já definidas pelo modelo. E, também, pelo Teorema Central do Limite: à medida que o número de replicações na simulação  aumenta, a distribuição amostral do poder empírico converge para uma normal independentemente da distribuição geradora dos betas.
 
 #### Função para gerar betas aleatórios
 ```{r}
@@ -202,21 +211,12 @@ gera_beta <- function(blocos, desvio, seed = 123) {
 }
 ```
 
-
-#### Normalidade
-É importante sinalizar que considera-se o efeito do j-ésimo bloco como uma variável normal para a simulação, garantindo a suposição inicialmente apontada. Sua distribuição é dada por:
-
-$$
-\beta_{j} \sim N(0,s^2)
-$$
-Essa escolha é justificada por: - Princípio da máxima entropia: a distribuição normal é a menos restritiva, qualquer outra distribuição introduziria suposições adicionais às já definidas pelo modelo. - Teorema Central do Limite: à medida que o número de replicações cresce na simulação, a distribuição amostral do poder empírico converge para uma normal independentemente da distribuição geradora dos beta.
-
 #### Desvios
-Em cada cenário, escolhemos uma porcentagem da variância total para se tornar a variância do bloco e geramos o vetor de beta a partir desse desvio.
+Em cada cenário, considera-se uma porcentagem da variância total como a variância do bloco e são gerados os vetores de beta a partir desses desvios.
 
-Além disso, foi definido as variâncias dos erros para ser aplicada nas simulações seguintes.
+Além disso, são definidas as variâncias dos erros como consequência de cada porcentagem considerada para os blocos.
 ```{r}
-# Fraco
+# Fraco - 8%
 sigma2_bloco_fraco <- 0.08 * sigma2  
 sigma2_erro_fraco  <- 0.92 * sigma2  
 
@@ -266,7 +266,7 @@ cat("DIC:\n"); (poder_dic_bfraco <- mean(sim_bfraco["dic", ]))
 cat("BIC:\n"); (poder_bic_bfraco <- mean(sim_bfraco["bic", ]))
 ```
 
-No cenário de bloco fraco, os dois modelos apresentaram poder similar, com o DIC levemente superior ao BIC. Quando o efeito de bloco é irrelevante, o BIC não se beneficia do controle local que propõe e a perda de graus de liberdade para estimar o efeito de bloco prejudica o seu poder, fazendo desse resultado o esperado.
+No cenário de bloco fraco, os dois modelos apresentam poder similar, com o DIC levemente superior ao BIC. Quando o efeito de bloco é irrelevante, o BIC não se beneficia do controle local que propõe e a perda de graus de liberdade para estimar o efeito de bloco prejudica o seu poder, o que explica esse resultado.
 
 #### Distribuição p-valor
 
@@ -311,7 +311,7 @@ cat("DIC:\n"); (poder_dic_binter <- mean(sim_binter["dic", ]))
 cat("BIC:\n"); (poder_bic_binter <- mean(sim_binter["bic", ]))
 ```
 
-No cenário de bloco intermediário, o BIC apresenta poder consideravelmente superior vezes ao DIC. Quando o efeito de bloco é moderado, o DIC absorve essa variação no resíduo, inflando o quadrado médio do erro e reduzindo a estatística F dos tratamentos. O BIC isola o efeito de bloco antes de testar os tratamentos, reduzindo o resíduo e aumentando o poder do teste — evidenciando a vantagem do controle local quando a estrutura de blocos é relevante.
+No cenário de bloco intermediário, o BIC apresenta poder consideravelmente superior ao DIC. Quando o efeito de bloco é moderado, o DIC absorve essa variação no resíduo, inflando o quadrado médio do erro e reduzindo a estatística F. Já o BIC isola o efeito de bloco antes de testar os tratamentos, reduzindo o resíduo e aumentando o poder do teste — evidenciando a vantagem do controle local quando a estrutura de blocos é relevante.
 
 #### Distribuição p-valor
 
@@ -333,7 +333,7 @@ ggplot(pvalores_inter, aes(x = p, fill = Modelo)) +
   theme_minimal(base_family = "serif")
 ```
 
-O gráfico mostra que, no cenário de efeito de bloco intermediário, aproximadamente 64% dos p-valores do BIC ficaram abaixo do nível de significância alpha = 0,05 contra 41% do DIC. A concentração de p-valores pequenos é visivelmente maior para o BIC antes da linha tracejada, confirmando que o controle local melhora substancialmente a capacidade de detectar o efeito de tratamento quando o bloco tem relevância moderada.
+O gráfico mostra que, no cenário de efeito de bloco intermediário, aproximadamente 64% dos p-valores do BIC ficam abaixo do nível de significância alpha = 0,05 contra 41% no DIC. A concentração de p-valores pequenos é visivelmente maior para o BIC, confirmando que o controle local melhora substancialmente a capacidade de detectar o efeito de tratamento quando o bloco tem relevância moderada.
 
 ### Efeito de bloco forte
 
@@ -357,7 +357,7 @@ cat("Poder para efeito de bloco forte:\n")
 cat("DIC:\n"); (poder_dic_bforte <- mean(sim_bforte["dic", ]))
 cat("BIC:\n"); (poder_bic_bforte <- mean(sim_bforte["bic", ]))
 ```
-No cenário de bloco forte, a diferença entre os modelos foi bem significativa, o DBC atingiu poder de 0,928, detectando o efeito de tratamento em quase todas as simulações, enquanto o DIC caiu para 0,343 — menos da metade do poder do BIC. Quando o efeito de bloco é grande, o DIC absorve toda essa variação no resíduo, inflando o quadrado médio do erro a ponto de tornar o teste de tratamento quase incapaz de detectar diferenças reais. O BIC, ao isolar e remover o efeito de bloco antes de testar os tratamentos, preserva o poder do teste no mesmo patamar dos cenários anteriores.
+No cenário de bloco forte, a diferença entre os modelos é bem significativa, o BIC atinge poder de 0,928, detectando o efeito de tratamento em quase todas as simulações, enquanto o DIC cai para 0,343 — menos da metade do poder do BIC. Quando o efeito de bloco é grande, o DIC absorve toda essa variação no resíduo, inflando o quadrado médio do erro a ponto de tornar o teste de tratamento quase incapaz de detectar diferenças reais. O BIC, ao isolar e remover o efeito de bloco antes de testar os tratamentos, preserva o poder do teste como observado nos cenários anteriores.
 
 #### Distribuição p-valor
 
@@ -415,6 +415,7 @@ ggplot(pvalores_todos, aes(x = p_valor, fill = modelo)) +
 ### Análise de convergência
 
 ```{r}
+#| echo: false
 set.seed(123)
 
 replicas <- c(100, 1000, 10000)
@@ -504,7 +505,7 @@ knitr::kable(
 )
 ```
 
-Em todos os cenários, os valores de poder se estabilizam conforme o número de réplicas aumenta. De 100 para 10000 replicações, a variação é pequena, sustentando o uso padrão de 1000 repetições como suficiente para estimativas confiáveis.
+Em todos os cenários, os valores de poder empírico são aproximados ao valor real conforme o número de réplicas aumenta. De 100 para 10000 replicações, a variação é pequena, o que sustenta o uso padrão de 1000 repetições como suficiente para estimativas e resultados confiáveis.
 
 ### Poder por cenário de bloco
 
@@ -548,9 +549,6 @@ ggplot(tabela_long, aes(x = cenario, y = poder, fill = modelo)) +
         plot.title       = element_text(hjust = 0.5),
         panel.border     = element_rect(color = "gray80", fill = NA, linewidth = 0.5))
 ```
-
-O gráfico de barras apresenta o poder empírico estimado para o DIC e o BIC nos três cenários de efeito de bloco. No cenário de bloco fraco, os dois modelos apresentaram poder similar (DIC: 0,458; DBC: 0,444), com o DIC ligeiramente superior — resultado esperado, pois o DBC gasta graus de liberdade para estimar um efeito de bloco irrelevante, penalizando levemente o teste. <br>
-À medida que a intensidade do efeito de bloco aumenta, os modelos divergem. No cenário intermediário, o DBC supera o DIC (0,644 vs 0,413), e no cenário forte a diferença se torna expressiva (0,928 vs 0,343). Esse comportamento reflete mecanismos opostos: no DIC, o efeito de bloco é absorvido integralmente pelo resíduo, resultando noaumento do quadrado médio do erro e reduzindo a estatística F progressivamente. No BIC, o efeito de bloco é isolado antes do teste de tratamento — o resíduo reflete apenas o erro puro, que diminui proporcionalmente conforme mais variância é atribuída aos blocos. Com menos ruído no resíduo, o sinal dos tratamentos se torna mais fácil de detectar, elevando o poder do BIC de 0,444 no cenário fraco para 0,928 no cenário forte.
 
 
 ## Escolher DIC ou BIC: poder por cenário de intensidade de bloco
@@ -626,7 +624,8 @@ ggplot(df_long, aes(x = intensidade, y = poder, color = modelo, linetype = model
 
 # Conclusão
 
-Por meio das simulações, é possível concluir que a escolha entre DIC e BIC depende diretamente da relevância dos blocos no experimento. Quando o efeito de bloco é irrelevante, o DIC apresenta poder ligeiramente superior — o BIC consome graus de liberdade sem benefício correspondente. Conforme a intensidade do bloco aumenta, o DIC perde poder progressivamente enquanto o BIC permanece estável, pois isola o efeito de bloco antes de testar os tratamentos. <br>
+Por meio das simulações a partir do determinado cenário, é possível concluir que a escolha entre os delineamentos DIC e O BIC depende diretamente da relevância dos blocos no experimento. Quando o efeito de bloco é irrelevante, o DIC apresenta poder ligeiramente superior — o BIC consome graus de liberdade sem benefício correspondente. Conforme a intensidade do bloco aumenta, o DIC perde poder progressivamente enquanto o BIC permanece estável, pois isola o efeito de bloco antes de testar os tratamentos. <br>
 
-O ponto de cruzamento em s aproximadamente igual a 3.5 delimita a fronteira a partir da qual o BIC passa a ser preferível nesse caso — evidenciando que, em experimentos com heterogeneidade relevante entre unidades experimentais, o controle local é essencial para preservar o poder do teste. <br>
+O ponto de cruzamento em s aproximadamente igual a 3.5 delimita a fronteira a partir da qual o BIC passa a ser preferível nesse caso, evidenciando que, em experimentos com heterogeneidade relevante entre unidades experimentais, o controle local é essencial para preservar o poder do teste. <br>
+
 
