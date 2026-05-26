@@ -1,0 +1,588 @@
+---
+title: "Poder e ANOVA: uma simulação de desempenho dos delineamentos DIC e BIC"
+author: "Cristiane Zhu e Júlia Zorzo Ferreira"
+format:
+  html:
+    theme: journal
+    toc: true
+    toc-location: left
+    toc-depth: 3
+    toc-title: "Sumário"
+    number-sections: true
+    smooth-scroll: true
+
+editor: visual
+---
+
+# Contextualização
+
+Entre os delineamentos mais utilizados no planejamento de experimentos estão o **delineamento inteiramente casualizado (DIC)** e o **delineamento em blocos completos casualizados (BIC)**. Ambos avaliam os efeitos de tratamento - o que se aplica nas unidades experimentais - por meio da análise de variância (ANOVA). É natural o surgimento de dúvidas em relação à escolha do melhor delineamento, por isso é essencial compreender o desempenho de cada um deles dado o contexto específico a fim de conduzir um experimento adequadamente.
+
+No delineamento inteiramente casualizado, toda variação não explicada pelos tratamentos é absorvida pelo erro. Já o BIC introduz uma estrutura de blocos que, quando relevante, retira do erro uma parcela da variabilidade — reduzindo o quadrado médio dele e aumentando a estatística F do teste. Por essa razão, o BIC pode ter maior poder que o DIC. Porém, quando o efeito de bloco é fraco ou inexistente, o BIC perde graus de liberdade sem qualquer ganho correspondente, penalizando o teste. Portanto, nem sempre o delineamento em blocos é a melhor escolha para o experimento, já que não apresenta melhor eficácia que o delineamento inteiramente casualizado em todos os casos.
+
+O poder do teste — probabilidade de rejeitar a hipótese nula quando ela é falsa — depende simultaneamente da magnitude dos efeitos de tratamento, da variabilidade do erro e da relevância da estrutura de blocos. Como esses fatores raramente são conhecidos antes do experimento, a simulação computacional permite investigar como o poder se comporta em diferentes cenários fixados com diferenciação dos blocos.
+
+Dessa forma, o objetivo desse trabalho é comparar o poder empírico do DIC e do BIC por meio de simulações de Monte Carlo, em que são fixados parâmetros e variadas as intensidades dos efeitos de bloco, pode-se discutir precisamente o comportamento dos delineamentos, evidenciando principalmente o ponto em que BIC passa a ser preferível em relação ao DIC para determinado experimento, dado um panorama em que o efeito de tratamento pode ser facilmente confundido com o resíduo.
+
+# Teoria
+
+## Modelos DIC e BIC
+
+### Modelo DIC
+
+$$
+Y_{ij} = \mu + \tau_i + \varepsilon_{ij}, \quad i = 1, \dots, k;\; j = 1, \dots, r
+$$
+
+Onde:
+
+-   $Y_{ij}$: observação do $i$-ésimo tratamento na $j$-ésima repetição\
+-   $\mu$: média geral\
+-   $\tau_i$: efeito do $i$-ésimo tratamento\
+-   $\varepsilon_{ij} \sim N(0, \sigma^2)$: erro aleatório
+
+### Modelo BIC
+
+$$
+Y_{ij} = \mu + \tau_i + \beta_j + \varepsilon_{ij}, \quad i = 1, \dots, k;\; j = 1, \dots, b
+$$
+
+Onde:
+
+-   $Y_{ij}$: observação do $i$-ésimo tratamento no $j$-ésimo bloco\
+-   $\mu$: média geral\
+-   $\tau_i$: efeito do $i$-ésimo tratamento\
+-   $\beta_j$: efeito do $j$-ésimo bloco\
+-   $\varepsilon_{ij} \sim N(0, \sigma^2)$: erro aleatório
+
+#### Suposições a serem satisfeitas
+
+$\varepsilon_{ij}$ independentes
+
+$$
+\varepsilon_{ij} \sim N(0,\sigma^2)
+$$
+
+$$
+\sum_{i=1}^{t}\tau_i = 0
+$$
+
+$$
+\sum_{i=1}^{j}\beta_j = 0
+$$
+
+### ANOVA: Análise de Variância
+
+A ANOVA decompõe a variação total dos dados em fontes identificáveis, avaliando se a variação atribuída aos tratamentos supera o ruído dos resíduos. Para isso, são calculadas somas de quadrados e quadrados médios que são utilizadas na operação da estatística de teste F, como ilustrado nas tabelas:
+
+```{r}
+#| echo: false
+tabela_dic <- data.frame(
+  `Fonte de Variação` = c("Tratamento", "Resíduo", "Total"),
+  `GL`  = c("t-1", "N-1", "N-t"),
+  `SQ`  = c("SQTrat", "SQRes", "SQTotal"),
+  `QM`  = c("QMTrat", "QMRes", "-"),
+  `F`   = c("QMTrat/QMRes", "-", "-"),
+  check.names = FALSE
+)
+
+tabela_dbc <- data.frame(
+  `Fonte de Variação` = c("Tratamento", "Bloco", "Resíduo", "Total"),
+  `GL`  = c("t-1", "b-1", "(t-1)(b-1)", "tb-1"),
+  `SQ`  = c("SQTrat", "SQBloco", "SQRes", "SQTotal"),
+  `QM`  = c("QMTrat", "QMBloco", "QMRes", "-"),
+  `F`   = c("QMTrat/QMRes", "QMBloco/QMRes", "-", "-"),
+  check.names = FALSE
+)
+```
+
+```{r}
+#| echo: false
+
+knitr::kable(
+  tabela_dic,
+  caption = "Tabela Anova para DIC"
+)
+```
+
+```{r}
+#| echo: false
+
+knitr::kable(
+  tabela_dbc,
+  caption = "Tabela ANOVA para BIC"
+)
+```
+
+## Teste de Hipóteses
+
+### Efeito de tratamento: DIC e BIC
+
+#### Hipótese nula
+
+Os efeitos de tratamento são iguais
+$$
+H_0: \tau_1 = \tau_2 = \tau_3 = \tau_4 = 0
+$$
+#### Hipótese alternativa
+
+Pelo menos um efeito de tratamento difere de zero
+$$
+H_1: \exists \, i \text{ tal que } \tau_i \neq 0
+$$
+Como deseja-se avaliar o poder do teste, a probabilidade de rejeitar a hipótese nula dado que ela é falsa, essa hipótese é rejeitada, portanto considera-se que pelo menos um efeito de tratamento difere de zero.
+
+No caso do BIC, as mesmas hipóteses são consideradas para o efeito do bloco:
+
+### Efeito de bloco: BIC
+
+#### Hipótese nula
+
+Os efeitos de bloco são iguais
+
+$$
+H_0: \beta_1 = \beta_2 = \beta_3 = \beta_4 = 0 
+$$
+
+#### Hipótese alternativa
+
+Pelo menos um efeito de bloco difere de zero
+$$
+H_1: \exists \, j \text{ tal que } \beta_j \neq 0
+$$
+# Simulações
+
+```{r}
+#| echo: false
+# Bibliotecas
+library(ggplot2)
+library(knitr)
+library(tidyr)
+```
+
+## Fixando valores
+
+```{r}
+tratamentos <- 4
+blocos <- 4
+n_obs <- tratamentos * blocos
+
+trat  <- rep(1:tratamentos, times = blocos)
+bloco <- rep(1:blocos, each = tratamentos)
+
+mu <- 100
+
+## tau com efeitos significativos
+tau <- c(0, 4, 8, -12) 
+```
+
+Em que n_obs é o número de observações, mu é a média geral das observações e tau o efeito de tratamento, necessariamente significativo.
+
+### Escolha da variância
+
+Escolha de uma variância arbitrária
+
+```{r}
+sigma2 <- 126
+```
+
+# Efeitos de bloco
+Para comparar o poder entre os modelos DIC e BIC, escolhemos três cenários de intensidade dos efeitos de bloco: fraco, intermediário e forte.
+
+### Função para gerar betas aleatórios
+```{r}
+gera_beta <- function(blocos, desvio, seed = 123) {
+  set.seed(seed)
+  beta_orig <- rnorm(blocos, 0, sd = desvio)
+  beta_orig - mean(beta_orig)
+}
+```
+
+
+### Normalidade
+É importante sinalizar que considera-se o efeito do j-ésimo bloco como uma variável normal para a simulação, garantindo a suposição inicialmente apontada. Sua distribuição é dada por:
+
+$$
+\beta_{j} \sim N(0,s^2)
+$$
+Essa escolha é justificada por: - Princípio da máxima entropia: a distribuição normal é a menos restritiva, qualquer outra distribuição introduziria suposições adicionais às já definidas pelo modelo. - Teorema Central do Limite: à medida que o número de replicações cresce na simulação, a distribuição amostral do poder empírico converge para uma normal independentemente da distribuição geradora dos beta.
+
+### Desvios
+Em cada cenário, escolhemos uma porcentagem da variância total para se tornar a variância do bloco e geramos o vetor de beta a partir desse desvio.
+
+Além disso, foi definido as variâncias dos erros para ser aplicada nas simulações seguintes.
+```{r}
+# Fraco
+sigma2_bloco_fraco <- 0.08 * sigma2  
+sigma2_erro_fraco  <- 0.92 * sigma2  
+
+beta_fraco <- gera_beta(blocos, desvio = sqrt(sigma2_bloco_fraco))
+
+# Intermediário — 40%
+sigma2_bloco_inter <- 0.40 * sigma2 
+sigma2_erro_inter  <- 0.60 * sigma2
+
+beta_inter <- gera_beta(blocos, desvio = sqrt(sigma2_bloco_inter))
+
+# Forte — 70%
+sigma2_bloco_forte <- 0.70 * sigma2
+sigma2_erro_forte  <- 0.30 * sigma2  
+
+beta_forte <- gera_beta(blocos, desvio = sqrt(sigma2_bloco_forte))
+
+
+cat("Vetor de valores para os betas:\n");
+cat("Efeito fraco:\n"); (beta_fraco)
+cat("Efeito intermediário:\n"); (beta_inter)
+cat("Efeito forte:\n"); (beta_forte)
+
+```
+
+## Testes de poder
+
+### Efeito de bloco fraco
+
+#### Cálculo do poder
+
+```{r}
+set.seed(123)
+
+sim_bfraco <- 
+  replicate(1000, {
+  erro  <- rnorm(n_obs, 0, sqrt(sigma2_erro_fraco))
+  y     <- mu + tau[trat] + beta_fraco[bloco] + erro
+  p_bic <- summary(aov(y ~ factor(trat) + factor(bloco)))[[1]]["factor(trat)", "Pr(>F)"]
+  p_dic <- summary(aov(y ~ factor(trat)))[[1]]["factor(trat)",  "Pr(>F)"]
+  c(bic = p_bic < 0.05, dic = p_dic < 0.05,
+    p_bic = p_bic, p_dic = p_dic)
+})
+
+cat("Poder para efeito de bloco fraco:\n");
+cat("DIC:\n"); (poder_dic_bfraco <- mean(sim_bfraco["dic", ]))
+cat("BIC:\n"); (poder_bic_bfraco <- mean(sim_bfraco["bic", ]))
+```
+
+No cenário de bloco fraco, os dois modelos apresentaram poder similar, com o DIC levemente superior ao BIC. Quando o efeito de bloco é irrelevante, o BIC não se beneficia do controle local que propõe e a perda de graus de liberdade para estimar o efeito de bloco prejudica o seu poder, fazendo desse resultado o esperado.
+
+#### Distribuição p-valor
+
+```{r}
+pvalores_fraco <- data.frame(
+  p      = c(sim_bfraco["p_dic", ], sim_bfraco["p_bic", ]),
+  Modelo = rep(c("DIC", "BIC"), each = 1000)
+)
+
+pvalores_fraco$Modelo <- factor(pvalores_fraco$Modelo, levels = c("DIC", "BIC"))
+
+ggplot(pvalores_fraco, aes(x = p, fill = Modelo)) +
+  geom_histogram(alpha = 0.6, bins = 30, position = "identity") +
+  geom_vline(xintercept = 0.05, linetype = "dashed") +
+  scale_fill_manual(values = c(BIC = "#110C5E", DIC = "#029C57")) +
+  labs(x = "p-valor", y = "Número de simulações") +
+  facet_wrap(~Modelo) +
+  theme_minimal(base_family = "serif")
+```
+
+O gráfico mostra que, no cenário de bloco fraco, aproximadamente 40% dos p-valores de ambos os modelos ficaram abaixo de alpha = 0,05, indicando poder moderado para os dois delineamentos, como verificado.
+
+### Efeito de bloco intermediário
+
+#### Cálculo do poder
+
+```{r}
+#| echo: false
+set.seed(123)
+
+sim_binter <- 
+  replicate(1000, {
+  erro  <- rnorm(n_obs, 0, sqrt(sigma2_erro_inter))
+  y     <- mu + tau[trat] + beta_inter[bloco] + erro
+  p_bic <- summary(aov(y ~ factor(trat) + factor(bloco)))[[1]]["factor(trat)", "Pr(>F)"]
+  p_dic <- summary(aov(y ~ factor(trat)))[[1]]["factor(trat)",  "Pr(>F)"]
+  c(bic = p_bic < 0.05, dic = p_dic < 0.05,
+    p_bic = p_bic, p_dic = p_dic)
+})
+cat("Poder para efeito de bloco intermediário:\n")
+cat("DIC:\n"); (poder_dic_binter <- mean(sim_binter["dic", ]))
+cat("BIC:\n"); (poder_bic_binter <- mean(sim_binter["bic", ]))
+```
+
+No cenário de bloco intermediário, o BIC apresenta poder consideravelmente superior vezes ao DIC. Quando o efeito de bloco é moderado, o DIC absorve essa variação no resíduo, inflando o quadrado médio do erro e reduzindo a estatística F dos tratamentos. O BIC isola o efeito de bloco antes de testar os tratamentos, reduzindo o resíduo e aumentando o poder do teste — evidenciando a vantagem do controle local quando a estrutura de blocos é relevante.
+
+#### Distribuição p-valor
+
+```{r}
+#| echo: false
+pvalores_inter <- data.frame(
+  p      = c(sim_binter["p_dic", ], sim_binter["p_bic", ]),
+  Modelo = rep(c("DIC", "BIC"), each = 1000)
+)
+
+pvalores_inter$Modelo <- factor(pvalores_inter$Modelo, levels = c("DIC", "BIC"))
+
+ggplot(pvalores_inter, aes(x = p, fill = Modelo)) +
+  geom_histogram(alpha = 0.6, bins = 30, position = "identity") +
+  geom_vline(xintercept = 0.05, linetype = "dashed") +
+  scale_fill_manual(values = c(BIC = "#110C5E", DIC = "#029C57")) +
+  labs(x = "p-valor", y = "Número de simulações") +
+  facet_wrap(~Modelo) +
+  theme_minimal(base_family = "serif")
+```
+
+O gráfico mostra que, no cenário de efeito de bloco intermediário, aproximadamente 64% dos p-valores do BIC ficaram abaixo do nível de significância alpha = 0,05 contra 41% do DIC. A concentração de p-valores pequenos é visivelmente maior para o BIC antes da linha tracejada, confirmando que o controle local melhora substancialmente a capacidade de detectar o efeito de tratamento quando o bloco tem relevância moderada.
+
+### Efeito de bloco forte
+
+#### Cálculo do poder
+
+```{r}
+#| echo: false
+set.seed(123)
+
+sim_bforte <- 
+  replicate(1000, {
+  erro  <- rnorm(n_obs, 0, sqrt(sigma2_erro_forte))
+  y     <- mu + tau[trat] + beta_forte[bloco] + erro
+  p_bic <- summary(aov(y ~ factor(trat) + factor(bloco)))[[1]]["factor(trat)", "Pr(>F)"]
+  p_dic <- summary(aov(y ~ factor(trat)))[[1]]["factor(trat)",  "Pr(>F)"]
+  c(bic = p_bic < 0.05, dic = p_dic < 0.05,
+    p_bic = p_bic, p_dic = p_dic)
+})
+
+cat("Poder para efeito de bloco forte:\n")
+cat("DIC:\n"); (poder_dic_bforte <- mean(sim_bforte["dic", ]))
+cat("BIC:\n"); (poder_bic_bforte <- mean(sim_bforte["bic", ]))
+```
+No cenário de bloco forte, a diferença entre os modelos foi bem significativa, o DBC atingiu poder de 0,928, detectando o efeito de tratamento em quase todas as simulações, enquanto o DIC caiu para 0,343 — menos da metade do poder do BIC. Quando o efeito de bloco é grande, o DIC absorve toda essa variação no resíduo, inflando o quadrado médio do erro a ponto de tornar o teste de tratamento quase incapaz de detectar diferenças reais. O BIC, ao isolar e remover o efeito de bloco antes de testar os tratamentos, preserva o poder do teste no mesmo patamar dos cenários anteriores.
+
+#### Distribuição p-valor
+
+```{r}
+#| echo: false
+pvalores_forte <- data.frame(
+  p      = c(sim_bforte["p_dic", ], sim_bforte["p_bic", ]),
+  Modelo = rep(c("DIC", "BIC"), each = 1000)
+)
+
+pvalores_forte$Modelo <- factor(pvalores_forte$Modelo, levels = c("DIC", "BIC"))
+
+ggplot(pvalores_forte, aes(x = p, fill = Modelo)) +
+  geom_histogram(alpha = 0.6, bins = 30, position = "identity") +
+  geom_vline(xintercept = 0.05, linetype = "dashed") +
+  scale_fill_manual(values = c(BIC = "#110C5E", DIC = "#029C57")) +
+  labs(x = "p-valor", y = "Número de simulações") +
+  facet_wrap(~Modelo) +
+  theme_minimal(base_family = "serif")
+```
+
+O gráfico mostra que, no cenário de bloco forte, a maioria dos p-valores no modelo BIC se concentra abaixo de 0,05. Já para DIC, quase todos os valores estão acima de 0,05, ou seja, O DIC apresenta poder significantemente inferior ao BIC.
+
+### Comparação das distribuições p-valor
+
+```{r}
+#| echo: false
+pvalores_todos <- data.frame(
+  p_valor = c(sim_bfraco["p_dic", ], sim_bfraco["p_bic", ],
+              sim_binter["p_dic", ], sim_binter["p_bic", ],
+              sim_bforte["p_dic", ], sim_bforte["p_bic", ]),
+  modelo  = rep(c("DIC", "BIC"), times = 3, each = 1000),
+  cenario = rep(c("Bloco fraco", "Bloco intermediário", "Bloco forte"),
+                each = 2000)
+)
+
+pvalores_todos$cenario <- factor(pvalores_todos$cenario,
+  levels = c("Bloco fraco", "Bloco intermediário", "Bloco forte")
+)
+
+pvalores_todos$modelo <- factor(pvalores_todos$modelo,
+  levels = c("DIC", "BIC")
+)
+
+ggplot(pvalores_todos, aes(x = p_valor, fill = modelo)) +
+  geom_histogram(alpha = 0.6, bins = 30, position = "identity") +
+  geom_vline(xintercept = 0.05, linetype = "dashed") +
+  facet_grid(cenario ~ modelo) +
+  scale_fill_manual(values = c(BIC = "#110C5E", DIC = "#029C57")) +
+  labs(x = "p-valor", y = "Número de simulações", fill = NULL) +
+  theme_minimal(base_family = "serif") +
+  theme(legend.position = "none")
+```
+
+### Análise de convergência
+
+```{r}
+set.seed(123)
+
+replicas <- c(100, 1000, 10000)
+
+simula_replicas <- function(beta, replicas) {
+  lapply(replicas, function(B) {
+    sim <- replicate(B, {
+      erro  <- rnorm(n_obs, 0, sqrt(sigma2))
+      y     <- mu + tau[trat] + beta[bloco] + erro
+      
+      p_bic <- summary(aov(y ~ factor(trat) + factor(bloco)))[[1]]["factor(trat)", "Pr(>F)"]
+      p_dic <- summary(aov(y ~ factor(trat)))[[1]]["factor(trat)", "Pr(>F)"]
+      
+      c(bic = p_bic < 0.05, dic = p_dic < 0.05)
+    })
+    
+    data.frame(
+      replicacoes = B,
+      poder_dic   = mean(sim["dic", ]),
+      poder_bic   = mean(sim["bic", ])
+    )
+  })
+}
+
+res_rep <- rbind(
+  cbind(cenario = "Bloco fraco",         do.call(rbind, simula_replicas(beta_fraco, replicas))),
+  cbind(cenario = "Bloco intermediário", do.call(rbind, simula_replicas(beta_inter, replicas))),
+  cbind(cenario = "Bloco forte",         do.call(rbind, simula_replicas(beta_forte, replicas)))
+)
+```
+
+```{r}
+#| echo: false
+knitr::kable(
+  res_rep[res_rep$cenario == "Bloco fraco", -1],
+  caption = "Poder empírico do DIC e BIC — Bloco fraco"
+)
+
+knitr::kable(
+  res_rep[res_rep$cenario == "Bloco intermediário", -1],
+  caption = "Poder empírico do DIC e BIC — Bloco intermediário"
+)
+
+knitr::kable(
+  res_rep[res_rep$cenario == "Bloco forte", -1],
+  caption = "Poder empírico do DIC e BIC — Bloco forte"
+)
+```
+
+Em todos os cenários, os valores de poder se estabilizam conforme o número de réplicas aumenta. De 100 para 10000 replicações, a variação é pequena, sustentando o uso padrão de 1000 repetições como suficiente para estimativas confiáveis.
+
+### Poder por cenário de bloco
+
+```{r}
+#| echo: false
+tabela_long <- pivot_longer(
+  data.frame(
+    cenario = c("Bloco fraco", "Bloco intermediário", "Bloco forte"),
+    DIC = c(poder_dic_bfraco,
+        poder_dic_binter,
+        poder_dic_bforte),
+    BIC = c(poder_bic_bfraco,
+        poder_bic_binter,
+        poder_bic_bforte)
+  ),
+  cols      = c(DIC, BIC),
+  names_to  = "modelo",
+  values_to = "poder"
+)
+
+tabela_long$cenario <- factor(tabela_long$cenario,
+  levels = c("Bloco fraco", "Bloco intermediário", "Bloco forte")
+)
+
+tabela_long$modelo <- factor(tabela_long$modelo, levels = c("DIC", "BIC"))
+
+ggplot(tabela_long, aes(x = cenario, y = poder, fill = modelo)) +
+  geom_col(position = "dodge", width = 0.6, alpha = 0.65) +
+  geom_text(aes(label = scales::number(poder, accuracy = 0.001)),
+            position = position_dodge(width = 0.6),
+            vjust = -0.4, size = 3.5) +
+  scale_fill_manual(values = c(DIC = "#029C57", BIC = "#110C5E")) +
+  scale_y_continuous(limits = c(0, 1),
+                     labels = scales::percent_format(accuracy = 1)) +
+  labs(x = NULL, y = "Poder empírico", fill = NULL,
+       title = "Poder do teste por cenário de bloco") +
+  theme_minimal(base_size = 12, base_family = "serif") +
+  theme(legend.position = "top",
+        panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(),
+        plot.title       = element_text(hjust = 0.5),
+        panel.border     = element_rect(color = "gray80", fill = NA, linewidth = 0.5))
+```
+
+O gráfico de barras apresenta o poder empírico estimado para o DIC e o BIC nos três cenários de efeito de bloco. No cenário de bloco fraco, os dois modelos apresentaram poder similar (DIC: 0,458; DBC: 0,444), com o DIC ligeiramente superior — resultado esperado, pois o DBC gasta graus de liberdade para estimar um efeito de bloco irrelevante, penalizando levemente o teste. <br>
+À medida que a intensidade do efeito de bloco aumenta, os modelos divergem. No cenário intermediário, o DBC supera o DIC (0,644 vs 0,413), e no cenário forte a diferença se torna expressiva (0,928 vs 0,343). Esse comportamento reflete mecanismos opostos: no DIC, o efeito de bloco é absorvido integralmente pelo resíduo, resultando noaumento do quadrado médio do erro e reduzindo a estatística F progressivamente. No BIC, o efeito de bloco é isolado antes do teste de tratamento — o resíduo reflete apenas o erro puro, que diminui proporcionalmente conforme mais variância é atribuída aos blocos. Com menos ruído no resíduo, o sinal dos tratamentos se torna mais fácil de detectar, elevando o poder do BIC de 0,444 no cenário fraco para 0,928 no cenário forte.
+
+
+## Escolher DIC ou BIC: poder por cenário de intensidade de bloco
+
+```{r}
+set.seed(123)
+intensidades <- seq(0, 20, by = 1)
+
+resultados <- lapply(intensidades, function(s) {
+  sigma2_bloco <- s^2  # variância de bloco para esse s
+  sigma2_erro  <- max(sigma2 - sigma2_bloco, 1)  # erro puro = total - bloco
+  
+  sim <- replicate(1000, {
+    beta_orig <- rnorm(blocos, 0, sd = s)
+    beta      <- beta_orig - mean(beta_orig)
+    
+    erro <- rnorm(n_obs, 0, sqrt(sigma2_erro))  # erro particionado
+    y    <- mu + tau[trat] + beta[bloco] + erro
+    
+    p_bic <- summary(aov(y ~ factor(trat) + factor(bloco)))[[1]]["factor(trat)", "Pr(>F)"]
+    p_dic <- summary(aov(y ~ factor(trat)))[[1]]["factor(trat)", "Pr(>F)"]
+    
+    c(bic = p_bic < 0.05, dic = p_dic < 0.05)
+  })
+  
+  data.frame(
+    intensidade = s,
+    poder_dic   = mean(sim["dic", ]),
+    poder_bic   = mean(sim["bic", ])
+  )
+})
+
+df <- do.call(rbind, resultados)
+```
+
+```{r}
+#| echo: false
+df_long <- pivot_longer(df,
+  cols      = c(poder_dic, poder_bic),
+  names_to  = "modelo",
+  values_to = "poder"
+)
+
+df_long$modelo <- factor(df_long$modelo, levels = c("poder_dic", "poder_bic"))
+
+ggplot(df_long, aes(x = intensidade, y = poder, color = modelo, linetype = modelo)) +
+  geom_line(linewidth = 1, alpha = 0.65) +
+  geom_point(size = 2, alpha = 0.65) +
+  geom_vline(xintercept = 3.5, linetype = "dashed", color = "gray60") +
+  annotate("text", x = 3.8, y = 0.9,
+           label = "ponto de cruzamento",
+           hjust = 0, size = 3.5, color = "gray40") +
+  scale_color_manual(
+    values = c(poder_dic = "#029C57", poder_bic = "#110C5E"),
+    labels = c("DIC", "BIC")
+  ) +
+  scale_linetype_manual(
+    values = c(poder_dic = "dashed", poder_bic = "solid"),
+    labels = c("DIC", "BIC")
+  ) +
+  scale_x_continuous(breaks = seq(0, 20, by = 2)) +
+  scale_y_continuous(limits = c(0, 1), breaks = seq(0, 1, by = 0.1)) +
+  labs(
+    title    = "Poder empírico do DIC e BIC por intensidade do efeito de bloco",
+    x        = "Intensidade do efeito de bloco (s)",
+    y        = "Poder empírico",
+    color    = NULL,
+    linetype = NULL
+  ) +
+  theme_minimal(base_size = 13, base_family = "serif") +
+  theme(legend.position = "top")
+```
+
+# Conclusão
+
+Por meio das simulações, é possível concluir que a escolha entre DIC e BIC depende diretamente da relevância dos blocos no experimento. Quando o efeito de bloco é irrelevante, o DIC apresenta poder ligeiramente superior — o BIC consome graus de liberdade sem benefício correspondente. Conforme a intensidade do bloco aumenta, o DIC perde poder progressivamente enquanto o BIC permanece estável, pois isola o efeito de bloco antes de testar os tratamentos. <br>
+
+O ponto de cruzamento em s aproximadamente igual a 3.5 delimita a fronteira a partir da qual o BIC passa a ser preferível nesse caso — evidenciando que, em experimentos com heterogeneidade relevante entre unidades experimentais, o controle local é essencial para preservar o poder do teste. <br>
+
