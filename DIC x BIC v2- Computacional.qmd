@@ -121,12 +121,15 @@ knitr::kable(
 #### Hipótese nula
 
 Os efeitos de tratamento são iguais
+
 $$
 H_0: \tau_1 = \tau_2 = \tau_3 = \tau_4 = 0
 $$
+
 #### Hipótese alternativa
 
 Pelo menos um efeito de tratamento difere de zero
+
 $$
 H_1: \exists \, i \text{ tal que } \tau_i \neq 0
 $$
@@ -150,6 +153,7 @@ Pelo menos um efeito de bloco difere de zero
 $$
 H_1: \exists \, j \text{ tal que } \beta_j \neq 0
 $$
+
 # Simulações
 
 ```{r}
@@ -186,10 +190,10 @@ Escolha de uma variância arbitrária
 sigma2 <- 126
 ```
 
-# Efeitos de bloco
+### Efeitos de bloco
 Para comparar o poder entre os modelos DIC e BIC, escolhemos três cenários de intensidade dos efeitos de bloco: fraco, intermediário e forte.
 
-### Função para gerar betas aleatórios
+#### Função para gerar betas aleatórios
 ```{r}
 gera_beta <- function(blocos, desvio, seed = 123) {
   set.seed(seed)
@@ -199,7 +203,7 @@ gera_beta <- function(blocos, desvio, seed = 123) {
 ```
 
 
-### Normalidade
+#### Normalidade
 É importante sinalizar que considera-se o efeito do j-ésimo bloco como uma variável normal para a simulação, garantindo a suposição inicialmente apontada. Sua distribuição é dada por:
 
 $$
@@ -207,7 +211,7 @@ $$
 $$
 Essa escolha é justificada por: - Princípio da máxima entropia: a distribuição normal é a menos restritiva, qualquer outra distribuição introduziria suposições adicionais às já definidas pelo modelo. - Teorema Central do Limite: à medida que o número de replicações cresce na simulação, a distribuição amostral do poder empírico converge para uma normal independentemente da distribuição geradora dos beta.
 
-### Desvios
+#### Desvios
 Em cada cenário, escolhemos uma porcentagem da variância total para se tornar a variância do bloco e geramos o vetor de beta a partir desse desvio.
 
 Além disso, foi definido as variâncias dos erros para ser aplicada nas simulações seguintes.
