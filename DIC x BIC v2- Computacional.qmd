@@ -622,7 +622,7 @@ ggplot(df_long, aes(x = intensidade, y = poder, color = modelo, linetype = model
   theme(legend.position = "top")
 ```
 
-# Conclusão
+# Conclusão acerca dos resultados apresentados
 
 Por meio das simulações a partir do determinado cenário, é possível concluir que a escolha entre os delineamentos DIC e O BIC depende diretamente da relevância dos blocos no experimento. Quando o efeito de bloco é irrelevante, o DIC apresenta poder ligeiramente superior — o BIC consome graus de liberdade sem benefício correspondente. Conforme a intensidade do bloco aumenta, o DIC perde poder progressivamente enquanto o BIC permanece estável, pois isola o efeito de bloco antes de testar os tratamentos. <br>
 
@@ -630,134 +630,29 @@ O ponto de cruzamento em s aproximadamente igual a 3.5 delimita a fronteira a pa
 
 
 # Análise das observações
-```{r, warning = FALSE, fig.width = 12, fig.height = 5}
-library(patchwork)
+Dessas simulações, considera-se aleatoriamente 3 conjuntos de dados de cada cenário de bloco para visualização.
 
-sim_bforte2 <- 
-  replicate(10, {
-  erro  <- rnorm(n_obs, 0, sqrt(sigma2_erro_forte))
-  y   <- mu + tau[trat] + beta_forte[bloco] + erro
-  
+## Vetores de y derivados das simulações propostas
+```{r}
+set.seed(123)
+
+sim_y_forte <- replicate(1000, {
+  erro <- rnorm(n_obs, 0, sqrt(sigma2_erro_forte))
+  mu + tau[trat] + beta_forte[bloco] + erro
 })
 
-# Pegar uma simulação
-y_exemplo <- sim_bforte2[, 1]
+sim_y_fraco <- replicate(1000, {
+  erro <- rnorm(n_obs, 0, sqrt(sigma2_erro_fraco))
+  mu + tau[trat] + beta_fraco[bloco] + erro
+})
 
-# Tabela para ver qual é o ij de cada obs
-df_obs <- data.frame(
-  y     = y_exemplo,
-  trat  = factor(trat),
-  bloco = factor(bloco)
-)
-
-# Média por bloco
-df_media <- aggregate(y ~ bloco, data = df_obs, FUN = mean)
-
-g1<- ggplot(df_obs, aes(x = bloco, y = y)) +
-  geom_point(aes(color = trat), size = 3) +
-  geom_point(data = df_media, aes(x = bloco, y = y),
-             shape = 8, size = 4, color = "black") +
-  geom_hline(yintercept = mean(df_obs$y),
-             linetype = "dashed", color = "gray50") +
-  annotate("text", x = 0.6, y = mean(df_obs$y) + 1,
-           label = "média geral", size = 3.0, color = "gray50") +
-  scale_color_manual(values = c("pink", "yellow", "orange", "#C0392B"),
-                     labels = paste("Tratamento", 1:4)) +
-  labs(title = "Observações por bloco - forte",
-       x     = "Blocos",
-       y     = "y",
-       color = NULL) +
-  theme_minimal(base_size = 13, base_family = "serif") +
-  theme(legend.position   = "top",
-        plot.title        = element_text(hjust = 0.5),
-        panel.grid.major  = element_blank(),
-        panel.grid.minor  = element_blank(),
-        panel.border      = element_rect(color = "gray80", fill = NA, linewidth = 0.5))
-
-
-
-# Pegar uma simulação
-y_exemplo2 <- sim_bforte2[, 4]
-
-# Tabela para ver qual é o ij de cada obs
-df_obs2 <- data.frame(
-  y     = y_exemplo2,
-  trat  = factor(trat),
-  bloco = factor(bloco)
-)
-
-# Média por bloco
-df_media <- aggregate(y ~ bloco, data = df_obs2, FUN = mean)
-
-g2<- ggplot(df_obs2, aes(x = bloco, y = y)) +
-  geom_point(aes(color = trat), size = 3) +
-  geom_point(data = df_media, aes(x = bloco, y = y),
-             shape = 8, size = 4, color = "black") +
-  geom_hline(yintercept = mean(df_obs$y),
-             linetype = "dashed", color = "gray50") +
-  annotate("text", x = 0.6, y = mean(df_obs$y) + 1,
-           label = "média geral", size = 3.0, color = "gray50") +
-  scale_color_manual(values = c("pink", "yellow", "orange", "#C0392B"),
-                     labels = paste("Tratamento", 1:4)) +
-  labs(title = "Observações por bloco - forte",
-       x     = "Blocos",
-       y     = "y",
-       color = NULL) +
-  theme_minimal(base_size = 13, base_family = "serif") +
-  theme(legend.position   = "top",
-        plot.title        = element_text(hjust = 0.5),
-        panel.grid.major  = element_blank(),
-        panel.grid.minor  = element_blank(),
-        panel.border      = element_rect(color = "gray80", fill = NA, linewidth = 0.5))
-
-
-g1|g2
+sim_y_inter <- replicate(1000, {
+  erro <- rnorm(n_obs, 0, sqrt(sigma2_erro_inter))
+  mu + tau[trat] + beta_inter[bloco] + erro
+})
 ```
 
-### por função:
-```{r}
-plot_bloco <- function(sim_matrix, col, titulo = "Observações por bloco") {
-  y_exemplo <- sim_matrix[, col]
-  
-  df_obs <- data.frame(
-    y     = y_exemplo,
-    trat  = factor(trat),
-    bloco = factor(bloco)
-  )
-  
-  df_media <- aggregate(y ~ bloco, data = df_obs, FUN = mean)
-  media_geral <- mean(df_obs$y)
-  
-  ggplot(df_obs, aes(x = bloco, y = y)) +
-    geom_point(aes(color = trat), size = 3) +
-    geom_point(data = df_media, aes(x = bloco, y = y),
-               shape = 8, size = 4, color = "black") +
-    geom_hline(yintercept = media_geral,
-               linetype = "dashed", color = "gray50") +
-    annotate("text", x = 0.6, y = media_geral + 1,
-             label = "média geral", size = 3.0, color = "gray50") +
-    scale_color_manual(values = c("pink", "yellow", "orange", "#C0392B"),
-                       labels = paste("Tratamento", 1:4)) +
-    labs(title = titulo,
-         x     = "Blocos",
-         y     = "y",
-         color = NULL) +
-    theme_minimal(base_size = 13, base_family = "serif") +
-    theme(legend.position   = "top",
-          plot.title        = element_text(hjust = 0.5),
-          panel.grid.major  = element_blank(),
-          panel.grid.minor  = element_blank(),
-          panel.border      = element_rect(color = "gray80", fill = NA, linewidth = 0.5))
-}
-```
-
-#### chama as colunas:
-```{r, warning = FALSE, fig.width = 12, fig.height = 5}
-g1 <- plot_bloco(sim_bforte2, col = 1, titulo = "Observações por bloco - forte")
-g2 <- plot_bloco(sim_bforte2, col = 4, titulo = "Observações por bloco - forte")
-g1 | g2
-```
-### testando uma funçao geral
+## Função para gerar os gráficos
 ```{r}
 plot_bloco <- function(sim_matrix, col, titulo = "Observações por bloco", cores) {
   df_obs <- data.frame(
@@ -776,9 +671,9 @@ plot_bloco <- function(sim_matrix, col, titulo = "Observações por bloco", core
     geom_hline(yintercept = media_geral,
                linetype = "dashed", color = "gray50") +
     annotate("text", x = 0.6, y = media_geral + 1,
-             label = "média geral", size = 3.0, color = "gray50") +
+             label = "Média geral", size = 3.0, color = "gray50") +
     scale_color_manual(values = cores,
-                       labels = paste("Tratamento", 1:4)) +
+                       labels = paste("Trat.", 1:4)) +
     labs(title = titulo, x = "Blocos", y = "y", color = NULL) +
     theme_minimal(base_size = 13, base_family = "serif") +
     theme(legend.position   = "top",
@@ -789,113 +684,34 @@ plot_bloco <- function(sim_matrix, col, titulo = "Observações por bloco", core
 }
 ```
 
-```{r, warning = FALSE, fig.width = 12, fig.height = 5}
-cores_forte      <- c("pink", "yellow", "orange", "#C0392B")
-cores_fraco      <- c("#110C5E", "#029C57", "#D85A30", "#C0392B")
-cores_intermediario <- c("pink", "yellow", "orange", "#C0392B")  
+## Gráficos das observações
+```{r, fig.width = 12, fig.height = 5}
+cores_fraco         <- c("#a8d1f0", "#5ba3d9", "#2e7cbf", "#1a4a7a")
+cores_intermediario <- c("#E8B89A", "#C68642", "#A0522D", "#6B3A2A")
+cores_forte         <- c("pink", "yellow", "orange", "#C0392B")
 
-# Forte
-g1 <- plot_bloco(sim_bforte2,       col = 1, titulo = "Observações por bloco - forte",         cores = cores_forte)
-g2 <- plot_bloco(sim_bforte2,       col = 4, titulo = "Observações por bloco - forte",         cores = cores_forte)
-g3 <- plot_bloco(sim_bforte2,       col = 7, titulo = "Observações por bloco - forte",         cores = cores_forte)
+g1 <- plot_bloco(sim_y_fraco, col = 1,   titulo = "Conjunto 1",   cores = cores_fraco) + coord_cartesian(ylim = c(65, 135))
+g2 <- plot_bloco(sim_y_fraco, col = 400, titulo = "Conjunto 400", cores = cores_fraco) + coord_cartesian(ylim = c(65, 135))
+g3 <- plot_bloco(sim_y_fraco, col = 800, titulo = "Conjunto 800", cores = cores_fraco) + coord_cartesian(ylim = c(65, 135))
 
-# Fraco
-g4 <- plot_bloco(sim_bfraco2,       col = 1, titulo = "Observações por bloco - fraco",         cores = cores_fraco)
-g5 <- plot_bloco(sim_bfraco2,       col = 7, titulo = "Observações por bloco - fraco",         cores = cores_fraco)
-g6 <- plot_bloco(sim_bfraco2,       col = 3, titulo = "Observações por bloco - fraco",         cores = cores_fraco)
+g4 <- plot_bloco(sim_y_inter, col = 1,   titulo = "Conjunto 1",   cores = cores_intermediario) + coord_cartesian(ylim = c(65, 135))
+g5 <- plot_bloco(sim_y_inter, col = 400, titulo = "Conjunto 400", cores = cores_intermediario) + coord_cartesian(ylim = c(65, 135))
+g6 <- plot_bloco(sim_y_inter, col = 800, titulo = "Conjunto 800", cores = cores_intermediario) + coord_cartesian(ylim = c(65, 135))
 
-g1|g2|g3
-# Intermediário
-#g7 <- plot_bloco(sim_bintermediario, col = 1, titulo = "Observações por bloco - intermediário", cores = cores_intermediario)
-#g8 <- plot_bloco(sim_bintermediario, col = 4, titulo = "Observações por bloco - intermediário", cores = cores_intermediario)
-#g9 <- plot_bloco(sim_bintermediario, col = 9, titulo = "Observações por bloco - intermediário", cores = cores_intermediario)
+g7 <- plot_bloco(sim_y_forte, col = 1,   titulo = "Conjunto 1",   cores = cores_forte) + coord_cartesian(ylim = c(65, 135))
+g8 <- plot_bloco(sim_y_forte, col = 400, titulo = "Conjunto 400", cores = cores_forte) + coord_cartesian(ylim = c(65, 135))
+g9 <- plot_bloco(sim_y_forte, col = 800, titulo = "Conjunto 800", cores = cores_forte) + coord_cartesian(ylim = c(65, 135))
+
+(g1 | g2 | g3) + plot_annotation(title = "Bloco Fraco")
 ```
 
-
-```{r}
-sim_bfraco2 <- 
-  replicate(10, {
-  erro  <- rnorm(n_obs, 0, sqrt(sigma2_erro_fraco))
-  y   <- mu + tau[trat] + beta_fraco[bloco] + erro
-  
-})
-
-
-# Pegar uma simulação
-y_exemplo3 <- sim_bfraco2[, 1]
-
-# Tabela para ver qual é o ij de cada obs
-df_obs3 <- data.frame(
-  y     = y_exemplo3,
-  trat  = factor(trat),
-  bloco = factor(bloco)
-)
-
-# Média por tratamento
-df_media <- aggregate(y ~ bloco, data = df_obs3, FUN = mean)
-
-g3 <- ggplot(df_obs, aes(x = bloco, y = y)) +
-  geom_point(aes(color = trat), size = 3) +
-  geom_point(data = df_media, aes(x = bloco, y = y),
-             shape = 8, size = 4, color = "black") +
-  geom_hline(yintercept = mean(df_obs$y),
-             linetype = "dashed", color = "gray50") +
-  annotate("text", x = 0.6, y = mean(df_obs$y) + 1,
-           label = "média geral", size = 3.0, color = "gray50") +
-  scale_color_manual(values = c("#110C5E", "#029C57", "#D85A30", "#C0392B"),
-                     labels = paste("Tratamento", 1:4)) +
-  labs(title = "Observações por bloco - fraco",
-       x     = "Blocos",
-       y     = "y",
-       color = NULL) +
-  theme_minimal(base_size = 13, base_family = "serif") +
-  theme(legend.position   = "top",
-        plot.title        = element_text(hjust = 0.5),
-        panel.grid.major  = element_blank(),
-        panel.grid.minor  = element_blank(),
-        panel.border      = element_rect(color = "gray80", fill = NA, linewidth = 0.5))
-
-
-# Pegar uma simulação
-y_exemplo4 <- sim_bfraco2[, 7]
-
-# Tabela para ver qual é o ij de cada obs
-df_obs4 <- data.frame(
-  y     = y_exemplo3,
-  trat  = factor(trat),
-  bloco = factor(bloco)
-)
-
-# Média por tratamento
-df_media <- aggregate(y ~ bloco, data = df_obs4, FUN = mean)
-
-g4 <- ggplot(df_obs, aes(x = bloco, y = y)) +
-  geom_point(aes(color = trat), size = 3) +
-  geom_point(data = df_media, aes(x = bloco, y = y),
-             shape = 8, size = 4, color = "black") +
-  geom_hline(yintercept = mean(df_obs$y),
-             linetype = "dashed", color = "gray50") +
-  annotate("text", x = 0.6, y = mean(df_obs$y) + 1,
-           label = "média geral", size = 3.0, color = "gray50") +
-  scale_color_manual(values = c("#110C5E", "#029C57", "#D85A30", "#C0392B"),
-                     labels = paste("Tratamento", 1:4)) +
-  labs(title = "Observações por bloco - fraco",
-       x     = "Blocos",
-       y     = "y",
-       color = NULL) +
-  theme_minimal(base_size = 13, base_family = "serif") +
-  theme(legend.position   = "top",
-        plot.title        = element_text(hjust = 0.5),
-        panel.grid.major  = element_blank(),
-        panel.grid.minor  = element_blank(),
-        panel.border      = element_rect(color = "gray80", fill = NA, linewidth = 0.5))
-
-g3|g4
+```{r, echo = FALSE, fig.width = 12, fig.height = 5}
+(g4 | g5 | g6) + plot_annotation(title = "Bloco Intermediário")
 ```
 
-
-
-
+```{r, echo = FALSE, fig.width = 12, fig.height = 5}
+(g7 | g8 | g9) + plot_annotation(title = "Bloco Forte")
+```
 
 ####### rever
 
@@ -911,7 +727,7 @@ df_obs$res_dbc <- residuals(fit_dbc)
 # Transforma pra formato longo
 df_res <- data.frame(
   residuo = c(df_obs$res_dic, df_obs$res_dbc),
-  modelo  = rep(c("DIC", "DBC"), each = nrow(df_obs)),
+  modelo  = rep(c("DIC", "BIC"), each = nrow(df_obs)),
   trat    = rep(df_obs$trat, 2),
   bloco   = rep(df_obs$bloco, 2)
 )
@@ -922,7 +738,7 @@ ggplot(df_res, aes(x = trat, y = residuo, color = bloco)) +
   facet_wrap(~ modelo) +
   scale_color_manual(values = c("#110C5E", "#029C57", "#D85A30", "#C0392B"),
                      labels = paste("Bloco", 1:4)) +
-  labs(title = "Resíduos por tratamento — DIC vs DBC (bloco forte)",
+  labs(title = "Resíduos por tratamento — DIC vs BIC (bloco forte)",
        x     = "Tratamento",
        y     = "Resíduo",
        color = NULL) +
@@ -933,3 +749,4 @@ ggplot(df_res, aes(x = trat, y = residuo, color = bloco)) +
         panel.grid.minor = element_blank(),
         panel.border     = element_rect(color = "gray80", fill = NA, linewidth = 0.5))
 ```
+
