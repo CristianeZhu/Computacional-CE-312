@@ -162,6 +162,7 @@ $$
 library(ggplot2)
 library(knitr)
 library(tidyr)
+library(patchwork)
 ```
 
 ## Fixando valores
@@ -686,21 +687,24 @@ plot_bloco <- function(sim_matrix, col, titulo = "Observações por bloco", core
 
 ## Gráficos das observações
 ```{r, fig.width = 12, fig.height = 5}
+#| echo: false
 cores_fraco         <- c("#a8d1f0", "#5ba3d9", "#2e7cbf", "#1a4a7a")
 cores_intermediario <- c("#E8B89A", "#C68642", "#A0522D", "#6B3A2A")
 cores_forte         <- c("pink", "yellow", "orange", "#C0392B")
 
-g1 <- plot_bloco(sim_y_fraco, col = 1,   titulo = "Conjunto 1",   cores = cores_fraco) + coord_cartesian(ylim = c(65, 135))
-g2 <- plot_bloco(sim_y_fraco, col = 400, titulo = "Conjunto 400", cores = cores_fraco) + coord_cartesian(ylim = c(65, 135))
-g3 <- plot_bloco(sim_y_fraco, col = 800, titulo = "Conjunto 800", cores = cores_fraco) + coord_cartesian(ylim = c(65, 135))
+escala <- coord_cartesian(ylim = c(65, 135))
 
-g4 <- plot_bloco(sim_y_inter, col = 1,   titulo = "Conjunto 1",   cores = cores_intermediario) + coord_cartesian(ylim = c(65, 135))
-g5 <- plot_bloco(sim_y_inter, col = 400, titulo = "Conjunto 400", cores = cores_intermediario) + coord_cartesian(ylim = c(65, 135))
-g6 <- plot_bloco(sim_y_inter, col = 800, titulo = "Conjunto 800", cores = cores_intermediario) + coord_cartesian(ylim = c(65, 135))
+g1 <- plot_bloco(sim_y_fraco, col = 1,   titulo = "Conjunto 1",   cores = cores_fraco) + escala
+g2 <- plot_bloco(sim_y_fraco, col = 400, titulo = "Conjunto 400", cores = cores_fraco) + escala
+g3 <- plot_bloco(sim_y_fraco, col = 800, titulo = "Conjunto 800", cores = cores_fraco) + escala
 
-g7 <- plot_bloco(sim_y_forte, col = 1,   titulo = "Conjunto 1",   cores = cores_forte) + coord_cartesian(ylim = c(65, 135))
-g8 <- plot_bloco(sim_y_forte, col = 400, titulo = "Conjunto 400", cores = cores_forte) + coord_cartesian(ylim = c(65, 135))
-g9 <- plot_bloco(sim_y_forte, col = 800, titulo = "Conjunto 800", cores = cores_forte) + coord_cartesian(ylim = c(65, 135))
+g4 <- plot_bloco(sim_y_inter, col = 1,   titulo = "Conjunto 1",   cores = cores_intermediario) + escala
+g5 <- plot_bloco(sim_y_inter, col = 400, titulo = "Conjunto 400", cores = cores_intermediario) + escala
+g6 <- plot_bloco(sim_y_inter, col = 800, titulo = "Conjunto 800", cores = cores_intermediario) + escala
+
+g7 <- plot_bloco(sim_y_forte, col = 1,   titulo = "Conjunto 1",   cores = cores_forte) + escala
+g8 <- plot_bloco(sim_y_forte, col = 400, titulo = "Conjunto 400", cores = cores_forte) + escala
+g9 <- plot_bloco(sim_y_forte, col = 800, titulo = "Conjunto 800", cores = cores_forte) + escala
 
 (g1 | g2 | g3) + plot_annotation(title = "Bloco Fraco")
 ```
@@ -713,40 +717,56 @@ g9 <- plot_bloco(sim_y_forte, col = 800, titulo = "Conjunto 800", cores = cores_
 (g7 | g8 | g9) + plot_annotation(title = "Bloco Forte")
 ```
 
-####### rever
+## Função para gerar os gráficos
 
-```{r}
-# Ajusta os modelos
-fit_dic <- aov(y_exemplo ~ factor(trat))
-fit_dbc <- aov(y_exemplo ~ factor(trat) + factor(bloco))
+```{r, fig.width = 12, fig.height = 5}
+set.seed(123)
+plot_residuos <- function(sim_matrix, col, titulo = "Resíduos por tratamento", cores) {
+  y <- sim_matrix[, col]
+  
+  df <- data.frame(
+    y     = y,
+    trat  = factor(trat),
+    bloco = factor(bloco)
+  )
+  
+  fit_dic <- aov(y ~ factor(trat))
+  fit_dbc <- aov(y ~ factor(trat) + factor(bloco))
+  
+  df_res <- data.frame(
+    residuo = c(residuals(fit_dic), residuals(fit_dbc)),
+    modelo  = rep(c("DIC", "BIC"), each = nrow(df)),
+    trat    = rep(df$trat, 2),
+    bloco   = rep(df$bloco, 2)
+  )
+  df_res$modelo <- factor(df_res$modelo, levels = c("DIC", "BIC"))
+  
+  ggplot(df_res, aes(x = bloco, y = residuo, color = trat)) +
+    geom_point(size = 3) +
+    geom_hline(yintercept = 0, linetype = "dashed", color = "gray50") +
+    facet_wrap(~ modelo) +
+    scale_color_manual(values = cores,
+                       labels = paste("Trat", 1:4)) +
+    labs(title = titulo, x = "Bloco", y = "Resíduo", color = NULL) +
+    theme_minimal(base_size = 13, base_family = "serif") +
+    theme(legend.position  = "top",
+          plot.title       = element_text(hjust = 0.5),
+          panel.grid.major = element_blank(),
+          panel.grid.minor = element_blank(),
+          panel.border     = element_rect(color = "gray80", fill = NA, linewidth = 0.5))
+}
+```
 
-# Adiciona resíduos ao dataframe
-df_obs$res_dic <- residuals(fit_dic)
-df_obs$res_dbc <- residuals(fit_dbc)
+## Gráfico de resíduos
 
-# Transforma pra formato longo
-df_res <- data.frame(
-  residuo = c(df_obs$res_dic, df_obs$res_dbc),
-  modelo  = rep(c("DIC", "BIC"), each = nrow(df_obs)),
-  trat    = rep(df_obs$trat, 2),
-  bloco   = rep(df_obs$bloco, 2)
-)
+```{r, fig.width = 12, fig.height = 5}
+#| echo: false
 
-ggplot(df_res, aes(x = trat, y = residuo, color = bloco)) +
-  geom_point(size = 3) +
-  geom_hline(yintercept = 0, linetype = "dashed", color = "gray50") +
-  facet_wrap(~ modelo) +
-  scale_color_manual(values = c("#110C5E", "#029C57", "#D85A30", "#C0392B"),
-                     labels = paste("Bloco", 1:4)) +
-  labs(title = "Resíduos por tratamento — DIC vs BIC (bloco forte)",
-       x     = "Tratamento",
-       y     = "Resíduo",
-       color = NULL) +
-  theme_minimal(base_size = 13, base_family = "serif") +
-  theme(legend.position  = "top",
-        plot.title       = element_text(hjust = 0.5),
-        panel.grid.major = element_blank(),
-        panel.grid.minor = element_blank(),
-        panel.border     = element_rect(color = "gray80", fill = NA, linewidth = 0.5))
+escala2 <- coord_cartesian(ylim = c(-20, 20))
+r1 <- plot_residuos(sim_y_fraco, col = 6, titulo = "Bloco fraco", cores_fraco) + escala2
+r2 <- plot_residuos(sim_y_inter, col = 6, titulo = "Bloco intermediário", cores_intermediario) + escala2
+r3 <- plot_residuos(sim_y_forte, col = 6, titulo = "Bloco forte", cores_forte) + escala2
+
+r1 | r2 | r3 + plot_annotation(title = "Análise dos resíduos")
 ```
 
